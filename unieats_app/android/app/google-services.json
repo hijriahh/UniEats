@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1044017820994",
+    "project_id": "unieats-f88f7",
+    "storage_bucket": "unieats-f88f7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1044017820994:android:63e9431612f240630184db",
+        "android_client_info": {
+          "package_name": "com.example.unieats_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDPtWHT0jzzR3gcPQ2ydlDIIWNJP1BJfmc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
