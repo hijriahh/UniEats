@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'login_screen.dart';
+import 'landing_screen.dart';
 
-void main() async { //
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Initialize Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-
   runApp(MyApp());
 }
 
@@ -21,7 +18,7 @@ class MyApp extends StatelessWidget {
       title: 'Food Delivery App',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: LoginScreen(),
+      home: LandingScreen(), // landing page first
     );
   }
 }
