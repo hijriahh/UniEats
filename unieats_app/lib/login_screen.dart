@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'auth_service.dart';
-import 'register_screen.dart';
-import 'customer_home_screen.dart';
 
 // --- MOCK CLASSES (REPLACE WITH YOUR ACTUAL IMPORTS IN YOUR PROJECT) ---
 // These mocks are needed to make the single file runnable in Canvas.
