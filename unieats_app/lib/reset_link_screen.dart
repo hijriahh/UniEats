@@ -5,8 +5,9 @@ const Color kPrimaryColor = Color(0xFFA07F60);
 const Color kBackgroundColor = Color.fromARGB(255, 255, 255, 255);
 const Color kTextColor = Color(0xFF333333);
 
-class LandingScreen extends StatelessWidget {
-  const LandingScreen({super.key});
+class ResetLinkSentScreen extends StatelessWidget {
+  final String email;
+  const ResetLinkSentScreen({super.key, required this.email});
 
   @override
   Widget build(BuildContext context) {
@@ -17,11 +18,11 @@ class LandingScreen extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // -------------------- HEADER IMAGE --------------------
+            // Top landing image with curve
             Stack(
               children: [
                 Container(
-                  height: 380, // 👈 IMAGE LOWER (changed only height)
+                  height: 300,
                   width: screenWidth,
                   decoration: const BoxDecoration(
                     image: DecorationImage(
@@ -34,10 +35,19 @@ class LandingScreen extends StatelessWidget {
                   child: Align(
                     alignment: Alignment.bottomCenter,
                     child: ClipPath(
-                      clipper: BottomCurveClipper(), // SAME CURVE
+                      clipper: BottomCurveClipper(),
                       child: Container(
-                        height: 100, // 👈 SAME AS BEFORE
-                        color: kBackgroundColor,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color: kBackgroundColor,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, -3),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -45,33 +55,36 @@ class LandingScreen extends StatelessWidget {
               ],
             ),
 
-            const SizedBox(height: 60), // 👈 PUSH CONTENT LOWER
-
-            // -------------------- CONTENT --------------------
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 30),
+              padding: const EdgeInsets.all(30),
               child: Column(
                 children: [
-                  const Text(
-                    'Welcome to UniEats',
+                  const SizedBox(height: 50),
+                  const Icon(
+                    Icons.message_rounded,
+                    color: kPrimaryColor,
+                    size: 100,
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Password reset link successfully sent to:',
                     style: TextStyle(
-                      fontSize: 34,
-                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
                       color: kTextColor,
                     ),
-                  ),
-                  const SizedBox(height: 14),
-                  const Text(
-                    'Experience easy access and secure services with our application.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.black54,
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    email,
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                      color: kPrimaryColor,
                     ),
+                    textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 50),
-
-                  // -------------------- GET STARTED BUTTON --------------------
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -79,29 +92,27 @@ class LandingScreen extends StatelessWidget {
                         backgroundColor: kPrimaryColor,
                         padding: const EdgeInsets.symmetric(vertical: 20),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
+                          borderRadius: BorderRadius.circular(20),
                         ),
                       ),
                       onPressed: () {
-                        Navigator.push(
+                        // Navigate back to login screen
+                        Navigator.pushAndRemoveUntil(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const LoginScreen(),
-                          ),
+                              builder: (_) => const LoginScreen()),
+                          (route) => false,
                         );
                       },
                       child: const Text(
-                        'Get Started',
+                        'Back to Login',
                         style: TextStyle(
                           fontSize: 18,
-                          fontWeight: FontWeight.w600,
                           color: Colors.white,
                         ),
                       ),
                     ),
                   ),
-
-                  const SizedBox(height: 40),
                 ],
               ),
             ),
@@ -112,7 +123,7 @@ class LandingScreen extends StatelessWidget {
   }
 }
 
-// -------------------- CURVE CLIPPER (UNCHANGED) --------------------
+// -------------------- CURVE CLIPPER --------------------
 class BottomCurveClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {

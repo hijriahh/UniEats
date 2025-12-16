@@ -1,75 +1,114 @@
 import 'package:flutter/material.dart';
 import 'auth_service.dart';
-import 'customer_home_screen.dart';
-import 'signup_screen.dart';
-import 'forgot_password_screen.dart';
+import 'login_screen.dart';
 
 const Color kPrimaryColor = Color(0xFFA07F60);
 const Color kBackgroundColor = Color.fromARGB(255, 255, 255, 255);
 const Color kTextColor = Color(0xFF333333);
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
+  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
   final AuthService _authService = AuthService();
   bool _isLoading = false;
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  void _showAlert(String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        content: Text(message),
-        actions: [
-          TextButton(
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2), // small padding
-              minimumSize: Size.zero, // remove default min size
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap, // shrink tap target
-            ),
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
-          )
-        ],
-      ),
-    );
-  }
-
-  void _loginUser() async {
+  void _registerUser() async {
+    String name = _nameController.text.trim();
     String email = _emailController.text.trim();
     String password = _passwordController.text.trim();
+    String confirmPassword = _confirmPasswordController.text.trim();
 
-    if (email.isEmpty || password.isEmpty) {
-      _showAlert('Please enter both email and password.');
+    if (name.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          content: const SizedBox(
+            width: 200,
+            child: Text('Please fill in all fields.'),
+          ),
+          actions: [
+            TextButton(
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    if (password != confirmPassword) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          content: const SizedBox(
+            width: 200,
+            child: Text('Passwords do not match.'),
+          ),
+          actions: [
+            TextButton(
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
       return;
     }
 
     setState(() => _isLoading = true);
 
-    String res = await _authService.loginUser(email, password);
+    String res = await _authService.registerUser(email, password);
 
     setState(() => _isLoading = false);
 
     if (res == 'success') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Registration successful!')),
+      );
+
+      // Optional: save display name
+      try {
+        var user = _authService.getCurrentUser();
+        if (user != null) await user.updateDisplayName(name);
+      } catch (e) {}
+
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => CustomerHomeScreen()),
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
       );
     } else {
-      _showAlert(res);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(res)),
+      );
     }
   }
 
@@ -77,19 +116,11 @@ class _LoginScreenState extends State<LoginScreen> {
     return InputDecoration(
       labelText: label,
       labelStyle: const TextStyle(color: Colors.grey),
-      filled: true,
-      fillColor: Colors.white,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: const BorderSide(color: Colors.brown, width: 2),
+      focusedBorder: const UnderlineInputBorder(
+        borderSide: BorderSide(color: kPrimaryColor, width: 2),
       ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: const BorderSide(color: Colors.brown, width: 2),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: const BorderSide(color: kPrimaryColor, width: 3),
+      enabledBorder: const UnderlineInputBorder(
+        borderSide: BorderSide(color: Colors.grey, width: 1),
       ),
     );
   }
@@ -103,7 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Top image with curve
+            // Top Image Section
             Stack(
               children: [
                 Container(
@@ -139,60 +170,52 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ],
             ),
-
             Padding(
               padding: const EdgeInsets.all(30),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Sign In',
+                    'Sign Up',
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
                       color: kTextColor,
                     ),
                   ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 5),
 
-                  // Email field
+                  // Name
+                  TextField(
+                    controller: _nameController,
+                    decoration: _buildInputDecoration('Name'),
+                  ),
+                  const SizedBox(height: 5),
+
+                  // Email
                   TextField(
                     controller: _emailController,
                     decoration: _buildInputDecoration('Email'),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 5),
 
-                  // Password field
+                  // Password
                   TextField(
                     controller: _passwordController,
                     obscureText: true,
                     decoration: _buildInputDecoration('Password'),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 5),
 
-                  // Forgot Password
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const ForgotPasswordScreen()),
-                        );
-                      },
-                      child: const Text(
-                        'Forgot Password?',
-                        style: TextStyle(
-                          color: kPrimaryColor,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
+                  // Confirm Password
+                  TextField(
+                    controller: _confirmPasswordController,
+                    obscureText: true,
+                    decoration: _buildInputDecoration('Confirm Password'),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 30),
 
-                  // Login button
+                  // Sign Up button
                   _isLoading
                       ? const Center(child: CircularProgressIndicator())
                       : SizedBox(
@@ -200,36 +223,32 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: kPrimaryColor,
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 20),
+                              padding: const EdgeInsets.symmetric(vertical: 20),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20),
                               ),
                             ),
-                            onPressed: _loginUser,
+                            onPressed: _registerUser,
                             child: const Text(
-                              'Login',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.white,
-                              ),
+                              'Sign Up',
+                              style: TextStyle(fontSize: 18, color: Colors.white),
                             ),
                           ),
                         ),
                   const SizedBox(height: 20),
 
-                  // Sign Up link
+                  // Back to login
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text("Don't have an account? "),
+                      const Text("Already have an account? "),
                       GestureDetector(
-                        onTap: () => Navigator.push(
+                        onTap: () => Navigator.pushReplacement(
                           context,
-                          MaterialPageRoute(builder: (_) => RegisterScreen()),
+                          MaterialPageRoute(builder: (_) => const LoginScreen()),
                         ),
                         child: const Text(
-                          "Sign Up",
+                          "Log In",
                           style: TextStyle(
                             color: kPrimaryColor,
                             fontWeight: FontWeight.bold,
