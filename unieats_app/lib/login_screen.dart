@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'auth_service.dart';
-import 'customer_home_screen.dart';
+import 'customer_homepage.dart';
 import 'signup_screen.dart';
 import 'forgot_password_screen.dart';
 
@@ -66,7 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (res == 'success') {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => CustomerHomeScreen()),
+        MaterialPageRoute(builder: (_) => CustomerHomepage()),
       );
     } else {
       _showAlert(res);
