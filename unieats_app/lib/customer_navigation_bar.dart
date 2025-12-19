@@ -16,7 +16,7 @@ class CustomerNavigationBar extends StatelessWidget {
       currentIndex: currentIndex,
       onTap: onTap,
       type: BottomNavigationBarType.fixed,
-      backgroundColor: Color(0xFFA07F60), 
+      backgroundColor: Color(0xFF402E1F), 
       selectedItemColor: Colors.white,
       unselectedItemColor: Colors.white70,
       showUnselectedLabels: true,
