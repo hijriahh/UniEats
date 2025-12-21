@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
-//import 'vendor_menu_page.dart';
+import 'vendor_menu_page.dart';
 import 'customer_navigation_bar.dart';
 
 const Color kPrimaryColor = Color(0xFFB7916E);
@@ -288,12 +288,12 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
         ),
         trailing: const Icon(Icons.arrow_forward_ios),
         onTap: () {
-          //Navigator.push(
-            //context,
-            //MaterialPageRoute(
-              //builder: (_) => VendorMenuPage(vendorData: vendor),
-            //),
-          //);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => VendorMenuPage(vendorData: vendor),
+            ),
+          );
         },
       ),
     );
