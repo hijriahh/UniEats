@@ -118,76 +118,40 @@ class VendorMenuPage extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Row(
-                    children: [
-                      // Menu image
-                      ClipRRect(
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(12),
-                          bottomLeft: Radius.circular(12),
+                  child: ListTile(
+                    leading: item['menuimage'] != null && item['menuimage'].isNotEmpty
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.asset(
+                              item['menuimage'],
+                              width: 60,
+                              height: 60,
+                              fit: BoxFit.cover,
+                            ),
+                          )
+                        : null,
+                    title: Text(item['name'] ?? ''),
+                    subtitle: Text(price),
+                    trailing: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: kPrimaryColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Container(
-                          width: 80,
-                          height: 80,
-                          color: Colors.grey.shade200,
-                          child: item['image'] != null && item['image']!.isNotEmpty
-                              ? Image.asset(
-                                  item['image'],
-                                  fit: BoxFit.cover,
-                                )
-                              : const Icon(Icons.fastfood, size: 40, color: Colors.grey),
+                        side: const BorderSide(color: kPrimaryColor, width: 1),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      ),
+                      onPressed: () {
+                        // TODO: Add to cart action
+                      },
+                      child: const Text(
+                        "Add",
+                        style: TextStyle(
+                          color: Color.fromARGB(255, 255, 255, 255),
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-
-                      const SizedBox(width: 12),
-
-                      // Menu details
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              item['name'] ?? '',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              price,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      // Add to Cart button
-                      Padding(
-                        padding: const EdgeInsets.only(right: 12),
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: kPrimaryColor,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          onPressed: () {
-                            // TODO: Add to cart functionality
-                          },
-                          child: const Text(
-                            "Add",
-                            style: TextStyle(
-                              color: Color.fromARGB(255, 255, 255, 255), // Text color matches primary color
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 );
               },
