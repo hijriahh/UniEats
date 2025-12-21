@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'vendor_menu_page.dart';
+//import 'vendor_menu_page.dart';
 import 'customer_navigation_bar.dart';
 
-// Theme colors
-const Color kPrimaryColor = Color(0xFFA07F60); // warm brown
-const Color kSecondaryColor = Color.fromARGB(255, 251, 255, 206); // white
-const Color kBackgroundColor = Color.fromARGB(255, 255, 255, 255);
+const Color kPrimaryColor = Color(0xFFB7916E);
+const Color kSecondaryColor = Color.fromARGB(255, 251, 255, 206);
+const Color kBackgroundColor = Colors.white;
 const double kHorizontalPadding = 12.0;
 
 class CustomerHomepage extends StatefulWidget {
@@ -71,36 +70,15 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
     }).toList();
   }
 
-  InputDecoration _buildInputDecoration(String hint) {
-    return InputDecoration(
-      contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-      hintText: hint,
-      filled: true,
-      fillColor: Colors.white,
-      prefixIcon: const Icon(Icons.search, color: Colors.grey, size: 20),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: const BorderSide(color: kPrimaryColor, width: 2),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: const BorderSide(color: kPrimaryColor, width: 2),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: const BorderSide(color: kPrimaryColor, width: 3),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: kBackgroundColor,
       appBar: AppBar(
         title: const Text("UniEats"),
-        backgroundColor:Color(0xFF402E1F),
-        titleTextStyle: const TextStyle(color: Colors.white, fontSize: 20),
+        backgroundColor: kBackgroundColor,
+        titleTextStyle: const TextStyle(color: Colors.black, fontSize: 20),
+        elevation: 0,
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -108,20 +86,18 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
           // 👋 Greeting
           Padding(
             padding: const EdgeInsets.symmetric(
-              horizontal: kHorizontalPadding,
-              vertical: 12,
-            ),
+                horizontal: kHorizontalPadding, vertical: 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: const [
                 Text(
                   "Hi 👋 Hungry today?",
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 4),
+                SizedBox(height: 6),
                 Row(
                   children: [
                     Icon(Icons.location_on, size: 16, color: Colors.grey),
@@ -138,62 +114,54 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
 
           // 🔍 Search bar
           Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: kHorizontalPadding,
-              vertical: 8,
-            ),
+            padding:
+                const EdgeInsets.symmetric(horizontal: kHorizontalPadding, vertical: 4),
             child: SizedBox(
               height: 50,
               child: TextField(
-                onChanged: (value) {
-                  setState(() => searchQuery = value.toLowerCase());
-                },
+                onChanged: (value) => setState(() {
+                  searchQuery = value.toLowerCase();
+                }),
                 style: const TextStyle(fontSize: 14),
-                decoration: _buildInputDecoration("Search vendor or food"),
-              ),
-            ),
-          ),
-
-          // 🏷 Category chips
-          SizedBox(
-            height: 50, // taller chip row
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              scrollDirection: Axis.horizontal,
-              children: [
-                categoryChip("All"),
-                categoryChip("Breakfast & Lunch"),
-                categoryChip("Beverages"),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          // 🤖 AI Recommended
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () {
-                print("AI Recommended clicked!");
-              },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: kHorizontalPadding, vertical: 8),
-                child: Row(
-                  children: const [
-                    Text(
-                      "🤖 AI Recommended",
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                  ],
+                decoration: InputDecoration(
+                  hintText: "Search vendor or food",
+                  filled: true,
+                  fillColor: Colors.grey.shade100,
+                  prefixIcon: const Icon(Icons.search, color: Colors.grey, size: 22),
+                  contentPadding:
+                      const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(28),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(28),
+                    borderSide: BorderSide(color: kPrimaryColor, width: 2),
+                  ),
                 ),
               ),
             ),
           ),
 
-          // 🏪 Vendor list with pull-to-refresh
+          const SizedBox(height: 12),
+
+          // 🏷 Category Chips
+          SizedBox(
+            height: 50,
+            child: ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              scrollDirection: Axis.horizontal,
+              children: [
+                modernCategoryChip("All"),
+                modernCategoryChip("Breakfast & Lunch"),
+                modernCategoryChip("Beverages"),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
+          // 🏪 Vendor List
           Expanded(
             child: vendors.isEmpty
                 ? Center(
@@ -211,15 +179,12 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
                     ),
                   )
                 : RefreshIndicator(
-                    onRefresh: () async {
-                      setState(() {});
-                    },
+                    onRefresh: () async => setState(() {}),
                     child: ListView.builder(
                       physics: const BouncingScrollPhysics(),
                       itemCount: filteredVendors.length,
-                      itemBuilder: (context, index) {
-                        return vendorCard(filteredVendors[index]);
-                      },
+                      itemBuilder: (context, index) =>
+                          vendorCard(filteredVendors[index]),
                     ),
                   ),
           ),
@@ -233,43 +198,39 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
   }
 
   // 🏷 Category Chip
-  Widget categoryChip(String category) {
+  Widget modernCategoryChip(String category) {
     final bool isSelected = selectedCategory == category;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 5), // spacing between chips
+      padding: const EdgeInsets.symmetric(horizontal: 6),
       child: GestureDetector(
-        onTap: () {
-          setState(() {
-            selectedCategory = category;
-          });
-        },
-        child: Container(
-          constraints: const BoxConstraints(minWidth: 6),
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 2), // size chip
+        onTap: () => setState(() => selectedCategory = category),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 2),
           decoration: BoxDecoration(
-            color: isSelected ? kPrimaryColor : Colors.white,
-            borderRadius: BorderRadius.circular(20),
+            color: isSelected ? kPrimaryColor : Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(22),
             border: Border.all(
-              color: isSelected ? kPrimaryColor : kPrimaryColor,
-              width: 2,
+              color: isSelected ? kPrimaryColor : Colors.grey.shade300,
+              width: 1,
             ),
             boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.3),
-                blurRadius: 3,
-                offset: const Offset(0, 2),
-              ),
+              if (isSelected)
+                BoxShadow(
+                  color: kPrimaryColor.withOpacity(0.3),
+                  blurRadius: 6,
+                  offset: const Offset(0, 3),
+                ),
             ],
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
                 category,
                 style: TextStyle(
-                  color: isSelected ? Colors.white : Colors.brown,
+                  color: isSelected ? Colors.white : Colors.brown.shade600,
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
                 ),
@@ -278,8 +239,8 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
                 const Padding(
                   padding: EdgeInsets.only(left: 6),
                   child: Icon(
-                    Icons.check,
-                    size: 18,
+                    Icons.check_circle,
+                    size: 16,
                     color: Colors.white,
                   ),
                 ),
@@ -295,7 +256,7 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
     final menuItems = extractMenu(vendor['menu']);
     return Card(
       elevation: 3,
-      color: const Color.fromARGB(255, 241, 238, 232),
+      color: Colors.grey.shade50,
       margin: const EdgeInsets.symmetric(
           horizontal: kHorizontalPadding, vertical: 6),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -304,7 +265,7 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
           radius: 28,
           backgroundColor: kSecondaryColor,
           backgroundImage: vendor['image'] != null && vendor['image']!.isNotEmpty
-              ? AssetImage(vendor['image'])
+              ? NetworkImage(vendor['image'])
               : null,
           child: vendor['image'] == null || vendor['image']!.isEmpty
               ? Text(
@@ -327,12 +288,12 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
         ),
         trailing: const Icon(Icons.arrow_forward_ios),
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => VendorMenuPage(vendorName: vendor['name']),
-            ),
-          );
+          //Navigator.push(
+            //context,
+            //MaterialPageRoute(
+              //builder: (_) => VendorMenuPage(vendorData: vendor),
+            //),
+          //);
         },
       ),
     );
@@ -342,7 +303,6 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
   List<String> extractMenu(dynamic menuData) {
     if (menuData == null) return [];
     List<String> items = [];
-
     if (menuData is Map) {
       menuData.forEach((key, value) {
         if (value is Map && value['name'] != null) {
@@ -350,7 +310,6 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
         }
       });
     }
-
     return items;
   }
 }
