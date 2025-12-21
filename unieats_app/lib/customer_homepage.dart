@@ -265,7 +265,7 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
           radius: 28,
           backgroundColor: kSecondaryColor,
           backgroundImage: vendor['image'] != null && vendor['image']!.isNotEmpty
-              ? NetworkImage(vendor['image'])
+              ? AssetImage(vendor['image'])
               : null,
           child: vendor['image'] == null || vendor['image']!.isEmpty
               ? Text(
