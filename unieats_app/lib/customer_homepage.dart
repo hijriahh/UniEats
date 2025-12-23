@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 //import 'vendor_menu_page.dart';
 import 'customer_navigation_bar.dart';
+import 'ai_chatbot.dart';
 
 const Color kPrimaryColor = Color(0xFFB7916E);
 const Color kSecondaryColor = Color.fromARGB(255, 251, 255, 206);
@@ -62,7 +63,8 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
       final matchesCategory =
           selectedCategory == "All" || category == selectedCategory;
 
-      final matchesSearch = searchQuery.isEmpty ||
+      final matchesSearch =
+          searchQuery.isEmpty ||
           name.contains(searchQuery) ||
           menuItems.contains(searchQuery);
 
@@ -86,26 +88,22 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
           // 👋 Greeting
           Padding(
             padding: const EdgeInsets.symmetric(
-                horizontal: kHorizontalPadding, vertical: 16),
+              horizontal: kHorizontalPadding,
+              vertical: 16,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: const [
                 Text(
                   "Hi 👋 Hungry today?",
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: 6),
                 Row(
                   children: [
                     Icon(Icons.location_on, size: 16, color: Colors.grey),
                     SizedBox(width: 4),
-                    Text(
-                      "UNIMAS Campus",
-                      style: TextStyle(color: Colors.grey),
-                    ),
+                    Text("UNIMAS Campus", style: TextStyle(color: Colors.grey)),
                   ],
                 ),
               ],
@@ -114,8 +112,10 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
 
           // 🔍 Search bar
           Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: kHorizontalPadding, vertical: 4),
+            padding: const EdgeInsets.symmetric(
+              horizontal: kHorizontalPadding,
+              vertical: 4,
+            ),
             child: SizedBox(
               height: 50,
               child: TextField(
@@ -127,9 +127,15 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
                   hintText: "Search vendor or food",
                   filled: true,
                   fillColor: Colors.grey.shade100,
-                  prefixIcon: const Icon(Icons.search, color: Colors.grey, size: 22),
-                  contentPadding:
-                      const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
+                  prefixIcon: const Icon(
+                    Icons.search,
+                    color: Colors.grey,
+                    size: 22,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 10,
+                    horizontal: 6,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(28),
                     borderSide: BorderSide.none,
@@ -168,8 +174,11 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: const [
-                        Icon(Icons.store_mall_directory,
-                            size: 60, color: Colors.grey),
+                        Icon(
+                          Icons.store_mall_directory,
+                          size: 60,
+                          color: Colors.grey,
+                        ),
                         SizedBox(height: 12),
                         Text(
                           "No vendors available",
@@ -189,6 +198,17 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
                   ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: kPrimaryColor,
+        icon: const Icon(Icons.smart_toy, color: Colors.white),
+        label: const Text("Ask Yuni", style: TextStyle(color: Colors.white)),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => AiChatbotPage()),
+          );
+        },
       ),
       bottomNavigationBar: CustomerNavigationBar(
         currentIndex: _currentIndex,
@@ -258,13 +278,16 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
       elevation: 3,
       color: Colors.grey.shade50,
       margin: const EdgeInsets.symmetric(
-          horizontal: kHorizontalPadding, vertical: 6),
+        horizontal: kHorizontalPadding,
+        vertical: 6,
+      ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
         leading: CircleAvatar(
           radius: 28,
           backgroundColor: kSecondaryColor,
-          backgroundImage: vendor['image'] != null && vendor['image']!.isNotEmpty
+          backgroundImage:
+              vendor['image'] != null && vendor['image']!.isNotEmpty
               ? AssetImage(vendor['image'])
               : null,
           child: vendor['image'] == null || vendor['image']!.isEmpty
@@ -289,10 +312,10 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
         trailing: const Icon(Icons.arrow_forward_ios),
         onTap: () {
           //Navigator.push(
-            //context,
-            //MaterialPageRoute(
-              //builder: (_) => VendorMenuPage(vendorData: vendor),
-            //),
+          //context,
+          //MaterialPageRoute(
+          //builder: (_) => VendorMenuPage(vendorData: vendor),
+          //),
           //);
         },
       ),
