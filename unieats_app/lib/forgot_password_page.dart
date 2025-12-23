@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:unieats_app/login_screen.dart';
+import 'package:unieats_app/login_page.dart';
 import 'auth_service.dart';
-import 'reset_link_screen.dart';
+import 'reset_link_page.dart';
 
 const Color kPrimaryColor = Color(0xFFA07F60);
 const Color kBackgroundColor = Color.fromARGB(255, 255, 255, 255);

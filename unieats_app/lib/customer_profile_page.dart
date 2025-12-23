@@ -17,6 +17,7 @@ class ProfilePage extends StatelessWidget {
           "Profile",
           style: TextStyle(color: Colors.brown, fontWeight: FontWeight.bold),
         ),
+        centerTitle: true,
       ),
 
       body: Padding(

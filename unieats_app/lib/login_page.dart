@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'auth_service.dart';
 import 'customer_homepage.dart';
-import 'signup_screen.dart';
-import 'forgot_password_screen.dart';
+import 'signup_page.dart';
+import 'forgot_password_page.dart';
 
 const Color kPrimaryColor = Color(0xFFA07F60);
 const Color kBackgroundColor = Color.fromARGB(255, 255, 255, 255);
