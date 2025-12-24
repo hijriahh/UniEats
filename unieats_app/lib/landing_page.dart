@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import 'login_screen.dart';
+import 'login_page.dart';
 
 const Color kPrimaryColor = Color(0xFFA07F60);
 const Color kBackgroundColor = Color.fromARGB(255, 255, 255, 255);
 const Color kTextColor = Color(0xFF333333);
 
-class ResetLinkSentScreen extends StatelessWidget {
-  final String email;
-  const ResetLinkSentScreen({super.key, required this.email});
+class LandingScreen extends StatelessWidget {
+  const LandingScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -18,11 +17,11 @@ class ResetLinkSentScreen extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Top landing image with curve
+            // -------------------- HEADER IMAGE --------------------
             Stack(
               children: [
                 Container(
-                  height: 300,
+                  height: 380, // 👈 IMAGE LOWER (changed only height)
                   width: screenWidth,
                   decoration: const BoxDecoration(
                     image: DecorationImage(
@@ -35,19 +34,10 @@ class ResetLinkSentScreen extends StatelessWidget {
                   child: Align(
                     alignment: Alignment.bottomCenter,
                     child: ClipPath(
-                      clipper: BottomCurveClipper(),
+                      clipper: BottomCurveClipper(), // SAME CURVE
                       child: Container(
-                        height: 100,
-                        decoration: BoxDecoration(
-                          color: kBackgroundColor,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 10,
-                              offset: const Offset(0, -3),
-                            ),
-                          ],
-                        ),
+                        height: 100, // 👈 SAME AS BEFORE
+                        color: kBackgroundColor,
                       ),
                     ),
                   ),
@@ -55,36 +45,33 @@ class ResetLinkSentScreen extends StatelessWidget {
               ],
             ),
 
+            const SizedBox(height: 60), // 👈 PUSH CONTENT LOWER
+
+            // -------------------- CONTENT --------------------
             Padding(
-              padding: const EdgeInsets.all(30),
+              padding: const EdgeInsets.symmetric(horizontal: 30),
               child: Column(
                 children: [
-                  const SizedBox(height: 50),
-                  const Icon(
-                    Icons.message_rounded,
-                    color: kPrimaryColor,
-                    size: 100,
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Password reset link successfully sent to:',
+                  const Text(
+                    'Welcome to UniEats',
                     style: TextStyle(
-                      fontSize: 15,
+                      fontSize: 34,
+                      fontWeight: FontWeight.bold,
                       color: kTextColor,
                     ),
-                    textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 5),
-                  Text(
-                    email,
-                    style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                      color: kPrimaryColor,
-                    ),
+                  const SizedBox(height: 14),
+                  const Text(
+                    'Experience easy access and secure services with our application.',
                     textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.black54,
+                    ),
                   ),
                   const SizedBox(height: 50),
+
+                  // -------------------- GET STARTED BUTTON --------------------
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
@@ -92,27 +79,29 @@ class ResetLinkSentScreen extends StatelessWidget {
                         backgroundColor: kPrimaryColor,
                         padding: const EdgeInsets.symmetric(vertical: 20),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(18),
                         ),
                       ),
                       onPressed: () {
-                        // Navigate back to login screen
-                        Navigator.pushAndRemoveUntil(
+                        Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (_) => const LoginScreen()),
-                          (route) => false,
+                            builder: (_) => const LoginScreen(),
+                          ),
                         );
                       },
                       child: const Text(
-                        'Back to Login',
+                        'Get Started',
                         style: TextStyle(
                           fontSize: 18,
+                          fontWeight: FontWeight.w600,
                           color: Colors.white,
                         ),
                       ),
                     ),
                   ),
+
+                  const SizedBox(height: 40),
                 ],
               ),
             ),
@@ -123,7 +112,7 @@ class ResetLinkSentScreen extends StatelessWidget {
   }
 }
 
-// -------------------- CURVE CLIPPER --------------------
+// -------------------- CURVE CLIPPER (UNCHANGED) --------------------
 class BottomCurveClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {

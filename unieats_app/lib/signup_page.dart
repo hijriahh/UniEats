@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'auth_service.dart';
-import 'login_screen.dart';
+import 'login_page.dart';
 
 const Color kPrimaryColor = Color(0xFFA07F60);
 const Color kBackgroundColor = Color.fromARGB(255, 255, 255, 255);
