@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'customer_navigation_bar.dart';
 import 'models/cart_model.dart';
-//import 'cart_page.dart';
 
 const Color kPrimaryColor = Color(0xFFB7916E);
 const Color kSecondaryColor = Color.fromARGB(255, 251, 255, 206);
-const Color kBackgroundColor = Color(0xFFF6F6F6); // subtle grey
+const Color kBackgroundColor = Color(0xFFF6F6F6);
 
 class VendorMenuPage extends StatefulWidget {
   final Map<String, dynamic> vendorData;
@@ -18,6 +17,119 @@ class VendorMenuPage extends StatefulWidget {
 
 class _VendorMenuPageState extends State<VendorMenuPage> {
   int _currentIndex = 0;
+
+  void _showMenuPopup(Map<dynamic, dynamic> item) {
+    int quantity = 1;
+    double priceValue = 0;
+
+    if (item['price'] is num) {
+      priceValue = item['price'].toDouble();
+    } else if (item['price'] is String) {
+      priceValue = double.tryParse(item['price'].replaceAll("RM", "")) ?? 0;
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return Dialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Menu image
+                    if (item['menuimage'] != null && item['menuimage'].isNotEmpty)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.asset(
+                          item['menuimage'],
+                          width: 180,
+                          height: 180,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    const SizedBox(height: 12),
+
+                    // Menu name
+                    Text(
+                      item['name'] ?? '',
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Price
+                    Text(
+                      "RM ${priceValue.toStringAsFixed(2)}",
+                      style: const TextStyle(fontSize: 18, color: kPrimaryColor),
+                    ),
+                    const SizedBox(height: 16),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Quantity buttons
+                        Row(
+                          children: [
+                            IconButton(
+                              onPressed: () {
+                                if (quantity > 1) setStateDialog(() => quantity--);
+                              },
+                              icon: const Icon(Icons.remove_circle_outline),
+                              color: kPrimaryColor,
+                              iconSize: 30,
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                              
+                              child: Text(
+                                quantity.toString(),
+                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: () => setStateDialog(() => quantity++),
+                              icon: const Icon(Icons.add_circle_outline),
+                              color: kPrimaryColor,
+                              iconSize: 30,
+                            ),
+                          ],
+                        ),
+
+                        // Add to Cart button
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: kPrimaryColor,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          ),
+                          onPressed: () {
+                            CartModel.addItem(
+                              widget.vendorData['name'],
+                              item['name'],
+                              priceValue,
+                              image: item['menuimage'],
+                            );
+                            Navigator.pop(context);
+                            setState(() {});
+                          },
+                          child: const Text("Add to Cart"),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -138,13 +250,7 @@ class _VendorMenuPageState extends State<VendorMenuPage> {
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                       ),
-                      onPressed: () {
-                        CartModel.addItem(widget.vendorData['name'], item['name'], priceValue, image: item['menuimage']);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("${item['name']} added to cart"), duration: const Duration(seconds: 1)),
-                        );
-                        setState(() {});
-                      },
+                      onPressed: () => _showMenuPopup(item),
                       child: const Text('Add'),
                     ),
                   ),
@@ -154,8 +260,6 @@ class _VendorMenuPageState extends State<VendorMenuPage> {
           ),
         ],
       ),
-
-      // ✅ Fixed navigation bar
       bottomNavigationBar: CustomerNavigationBar(currentIndex: _currentIndex),
     );
   }

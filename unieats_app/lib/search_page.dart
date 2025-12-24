@@ -3,9 +3,9 @@ import 'package:firebase_database/firebase_database.dart';
 import 'vendor_menu_page.dart';
 import 'customer_navigation_bar.dart';
 
-const Color kPrimaryColor = Color(0xFFB7916E); // Brown
+const Color kPrimaryColor = Color(0xFFB7916E);
 const Color kSecondaryColor = Color.fromARGB(255, 251, 255, 206);
-const Color kBackgroundColor = Color(0xFFF6F6F6); // subtle grey
+const Color kBackgroundColor = Color(0xFFF6F6F6);
 
 class SearchPage extends StatefulWidget {
   const SearchPage({Key? key}) : super(key: key);
@@ -17,34 +17,82 @@ class SearchPage extends StatefulWidget {
 class _SearchPageState extends State<SearchPage> {
   int _currentIndex = 1;
   String searchQuery = "";
-  late final DatabaseReference database;
-  List<Map<String, dynamic>> vendors = [];
+  final DatabaseReference database = FirebaseDatabase.instance.ref();
+
+  List<Map<String, dynamic>> menuList = [];
 
   @override
   void initState() {
     super.initState();
-    database = FirebaseDatabase.instance.ref();
     database.child('vendors').onValue.listen((event) {
       if (!mounted) return;
       final data = event.snapshot.value;
       if (data == null || data is! Map) {
-        setState(() => vendors = []);
+        setState(() => menuList = []);
         return;
       }
-      final List<Map<String, dynamic>> loaded = [];
-      data.forEach((key, value) {
-        if (value is Map) loaded.add(Map<String, dynamic>.from(value));
+
+      final List<Map<String, dynamic>> loadedMenus = [];
+
+      data.forEach((vendorId, vendorData) {
+        if (vendorData is Map && vendorData['menu'] is Map) {
+          final vendorName = vendorData['name'];
+          final menu = vendorData['menu'] as Map;
+
+          menu.forEach((menuId, menuData) {
+            if (menuData is Map) {
+              loadedMenus.add({
+                'menuName': menuData['name'],
+                'image': menuData['menuimage'], 
+                'price': menuData['price'],
+                'vendorName': vendorName,
+                'vendorData': Map<String, dynamic>.from(vendorData),
+              });
+            }
+          });
+        }
       });
-      setState(() => vendors = loaded);
+
+      setState(() => menuList = loadedMenus);
     });
   }
 
-  List<Map<String, dynamic>> get filteredVendors {
-    return vendors.where((vendor) {
-      final name = (vendor['name'] ?? '').toString().toLowerCase();
-      final menuText = extractMenu(vendor['menu']).join(" ").toLowerCase();
-      return searchQuery.isEmpty || name.contains(searchQuery) || menuText.contains(searchQuery);
+  List<Map<String, dynamic>> get filteredMenu {
+    if (searchQuery.isEmpty) return [];
+    return menuList.where((item) {
+      return item['menuName']
+          .toString()
+          .toLowerCase()
+          .contains(searchQuery);
     }).toList();
+  }
+
+  Widget buildMenuImage(String? imagePath) {
+    if (imagePath == null || imagePath.isEmpty) {
+      return _imagePlaceholder();
+    }
+
+    try {
+      // Use Image.asset for local assets
+      return Image.asset(
+        imagePath,
+        width: 70,
+        height: 70,
+        fit: BoxFit.cover,
+      );
+    } catch (_) {
+      return _imagePlaceholder();
+    }
+  }
+
+  Widget _imagePlaceholder() {
+    return Container(
+      width: 70,
+      height: 70,
+      color: kSecondaryColor,
+      alignment: Alignment.center,
+      child: const Icon(Icons.fastfood, color: Colors.white),
+    );
   }
 
   @override
@@ -54,19 +102,16 @@ class _SearchPageState extends State<SearchPage> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.brown),
-          onPressed: () => Navigator.pop(context), // <- goes back to previous page
-        ),
         title: const Text(
-          "Search",
+          "Search Food",
           style: TextStyle(color: Colors.brown, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.brown),
       ),
       body: Column(
         children: [
-          // Search bar
+          /// SEARCH BAR
           Padding(
             padding: const EdgeInsets.all(16),
             child: Container(
@@ -74,61 +119,100 @@ class _SearchPageState extends State<SearchPage> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(30),
                 boxShadow: [
-                  BoxShadow(color: Colors.grey.withOpacity(0.2), blurRadius: 6, offset: const Offset(0, 3))
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.2),
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
+                  )
                 ],
               ),
               child: TextField(
-                onChanged: (value) => setState(() => searchQuery = value.toLowerCase()),
+                onChanged: (value) =>
+                    setState(() => searchQuery = value.toLowerCase()),
                 decoration: const InputDecoration(
-                  hintText: "Search vendor or food",
-                  prefixIcon: Icon(Icons.search, color: Colors.grey),
+                  hintText: "Search food...",
+                  prefixIcon: Icon(Icons.search),
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 12),
 
-          // Search results
+          /// SEARCH RESULTS
           Expanded(
-            child: filteredVendors.isEmpty
-                ? const Center(child: Text("No vendors found", style: TextStyle(color: Colors.grey)))
+            child: filteredMenu.isEmpty
+                ? const Center(
+                    child: Text(
+                      "No food found",
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  )
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: filteredVendors.length,
+                    itemCount: filteredMenu.length,
                     itemBuilder: (context, index) {
-                      final vendor = filteredVendors[index];
-                      return Container(
-                        margin: const EdgeInsets.symmetric(vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(color: Colors.grey.withOpacity(0.2), blurRadius: 6, offset: const Offset(0, 3))
-                          ],
-                        ),
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            radius: 28,
-                            backgroundColor: kSecondaryColor,
-                            backgroundImage: vendor['image'] != null && vendor['image'].toString().isNotEmpty
-                                ? AssetImage(vendor['image'])
-                                : null,
-                            child: vendor['image'] == null
-                                ? Text(vendor['name'] != null ? vendor['name'][0] : '',
-                                    style: const TextStyle(color: Colors.white))
-                                : null,
+                      final item = filteredMenu[index];
+                      return InkWell(
+                        borderRadius: BorderRadius.circular(16),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  VendorMenuPage(vendorData: item['vendorData']),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 8),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.2),
+                                blurRadius: 6,
+                                offset: const Offset(0, 3),
+                              )
+                            ],
                           ),
-                          title: Text(vendor['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Text("${vendor['category']} • ⭐ ${vendor['rating'] ?? ''}"),
-                          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => VendorMenuPage(vendorData: vendor)),
-                            );
-                          },
+                          child: Row(
+                            children: [
+                              /// MENU IMAGE
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: buildMenuImage(item['image']),
+                              ),
+                              const SizedBox(width: 12),
+
+                              /// DETAILS
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item['menuName'] ?? '',
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      item['vendorName'] ?? '',
+                                      style: const TextStyle(color: Colors.grey),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      "RM ${item['price'] ?? ''}",
+                                      style: const TextStyle(color: kPrimaryColor),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       );
                     },
@@ -136,16 +220,8 @@ class _SearchPageState extends State<SearchPage> {
           ),
         ],
       ),
-      bottomNavigationBar: CustomerNavigationBar(currentIndex: _currentIndex),
+      bottomNavigationBar:
+          CustomerNavigationBar(currentIndex: _currentIndex),
     );
-  }
-
-  List<String> extractMenu(dynamic menuData) {
-    if (menuData == null || menuData is! Map) return [];
-    final List<String> items = [];
-    menuData.forEach((key, value) {
-      if (value is Map && value['name'] != null) items.add(value['name'].toString());
-    });
-    return items;
   }
 }
