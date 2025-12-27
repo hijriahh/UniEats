@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'vendor_menu_page.dart';
 import 'customer_navigation_bar.dart';
+import 'ai_chatbot.dart';
 
 const Color kPrimaryColor = Color(0xFFB7916E); // Brown
 const Color kSecondaryColor = Color.fromARGB(255, 251, 255, 206);
@@ -46,8 +47,12 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
       final name = (vendor['name'] ?? '').toString().toLowerCase();
       final category = (vendor['category'] ?? '').toString();
       final menuText = extractMenu(vendor['menu']).join(" ").toLowerCase();
-      final matchesCategory = selectedCategory == "All" || category == selectedCategory;
-      final matchesSearch = searchQuery.isEmpty || name.contains(searchQuery) || menuText.contains(searchQuery);
+      final matchesCategory =
+          selectedCategory == "All" || category == selectedCategory;
+      final matchesSearch =
+          searchQuery.isEmpty ||
+          name.contains(searchQuery) ||
+          menuText.contains(searchQuery);
       return matchesCategory && matchesSearch;
     }).toList();
   }
@@ -70,16 +75,26 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
                 children: const [
                   Text(
                     "Hello! Welcome 👋",
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 96, 48, 12)),
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Color.fromARGB(255, 96, 48, 12),
+                    ),
                   ),
                   SizedBox(height: 8),
                   Row(
                     children: [
-                      Icon(Icons.location_on, size: 16, color: Color.fromARGB(255, 96, 48, 12)),
+                      Icon(
+                        Icons.location_on,
+                        size: 16,
+                        color: Color.fromARGB(255, 96, 48, 12),
+                      ),
                       SizedBox(width: 4),
                       Text(
                         "UNIMAS Campus",
-                        style: TextStyle(color: Color.fromARGB(176, 96, 48, 12)),
+                        style: TextStyle(
+                          color: Color.fromARGB(176, 96, 48, 12),
+                        ),
                       ),
                     ],
                   ),
@@ -95,10 +110,17 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(30),
-                  boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.2), blurRadius: 6, offset: const Offset(0, 3))],
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.2),
+                      blurRadius: 6,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
                 ),
                 child: TextField(
-                  onChanged: (value) => setState(() => searchQuery = value.toLowerCase()),
+                  onChanged: (value) =>
+                      setState(() => searchQuery = value.toLowerCase()),
                   decoration: InputDecoration(
                     hintText: "Search vendor or food",
                     prefixIcon: const Icon(Icons.search, color: Colors.grey),
@@ -116,7 +138,11 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: ["All", "Breakfast & Lunch", "Beverages"].map((cat) => categoryChip(cat)).toList(),
+                children: [
+                  "All",
+                  "Breakfast & Lunch",
+                  "Beverages",
+                ].map((cat) => categoryChip(cat)).toList(),
               ),
             ),
             const SizedBox(height: 12),
@@ -124,21 +150,43 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
             // Vendor list
             Expanded(
               child: filteredVendors.isEmpty
-                  ? const Center(child: Text("No vendors available", style: TextStyle(color: Colors.grey)))
+                  ? const Center(
+                      child: Text(
+                        "No vendors available",
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    )
                   : ListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       itemCount: filteredVendors.length,
-                      itemBuilder: (context, index) => vendorCard(filteredVendors[index]),
+                      itemBuilder: (context, index) =>
+                          vendorCard(filteredVendors[index]),
                     ),
             ),
           ],
         ),
       ),
 
-      // ✅ bottom navigation bar — DO NOT CHANGE THIS
-      bottomNavigationBar: CustomerNavigationBar(
-        currentIndex: _currentIndex,
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: kPrimaryColor,
+        icon: const Icon(Icons.smart_toy, color: Colors.white),
+        label: const Text(
+          "Ask Yuni",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const AiChatbotPage()),
+          );
+        },
       ),
+
+      // ✅ FORCE BOTTOM-LEFT POSITION
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+
+      // ✅ bottom navigation bar — DO NOT CHANGE THIS
+      bottomNavigationBar: CustomerNavigationBar(currentIndex: _currentIndex),
     );
   }
 
@@ -155,18 +203,29 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
           decoration: BoxDecoration(
             color: selected ? kPrimaryColor : Colors.white,
             borderRadius: BorderRadius.circular(30),
-            boxShadow: selected ? [BoxShadow(color: Colors.brown.withOpacity(0.3), blurRadius: 6, offset: const Offset(0, 3))] : [],
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: Colors.brown.withOpacity(0.3),
+                      blurRadius: 6,
+                      offset: const Offset(0, 3),
+                    ),
+                  ]
+                : [],
           ),
           child: Row(
             children: [
               Text(
                 category,
-                style: TextStyle(color: selected ? Colors.white : Colors.brown.shade700, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: selected ? Colors.white : Colors.brown.shade700,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               if (selected) ...[
                 const SizedBox(width: 6),
                 const Icon(Icons.check_circle, size: 16, color: Colors.white),
-              ]
+              ],
             ],
           ),
         ),
@@ -181,26 +240,41 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.grey.withOpacity(0.2), blurRadius: 6, offset: const Offset(0, 3))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.2),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: ListTile(
         leading: CircleAvatar(
           radius: 28,
           backgroundColor: kSecondaryColor,
-          backgroundImage: vendor['image'] != null && vendor['image'].toString().isNotEmpty
+          backgroundImage:
+              vendor['image'] != null && vendor['image'].toString().isNotEmpty
               ? AssetImage(vendor['image'])
               : null,
           child: vendor['image'] == null
-              ? Text(vendor['name'] != null ? vendor['name'][0] : '', style: const TextStyle(color: Colors.white))
+              ? Text(
+                  vendor['name'] != null ? vendor['name'][0] : '',
+                  style: const TextStyle(color: Colors.white),
+                )
               : null,
         ),
-        title: Text(vendor['name'] ?? '', style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(
+          vendor['name'] ?? '',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
         subtitle: Text("${vendor['category']} • ⭐ ${vendor['rating'] ?? ''}"),
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => VendorMenuPage(vendorData: vendor)),
+            MaterialPageRoute(
+              builder: (_) => VendorMenuPage(vendorData: vendor),
+            ),
           );
         },
       ),
@@ -211,7 +285,8 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
     if (menuData == null || menuData is! Map) return [];
     final List<String> items = [];
     menuData.forEach((key, value) {
-      if (value is Map && value['name'] != null) items.add(value['name'].toString());
+      if (value is Map && value['name'] != null)
+        items.add(value['name'].toString());
     });
     return items;
   }
