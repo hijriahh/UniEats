@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 
+import 'vendor_navigation_bar.dart';
+import 'vendor_orders_page.dart';
+
 const Color kPrimaryColor = Color(0xFFB7916E);
 const Color kBackgroundColor = Color(0xFFF6F6F6);
 
@@ -18,7 +21,7 @@ class _VendorHomepageState extends State<VendorHomepage> {
   Map<String, dynamic>? topMenu;
 
   int newOrders = 0;
-  int inProgressOrders = 0;
+  int preparingOrders = 0;
   int completedOrders = 0;
   double todaySales = 0.0;
 
@@ -26,11 +29,11 @@ class _VendorHomepageState extends State<VendorHomepage> {
   void initState() {
     super.initState();
     _loadVendor();
-    _loadOrders();
+    _listenOrders();
   }
 
   // =========================
-  // LOAD VENDOR + TOP MENU
+  // LOAD VENDOR DATA
   // =========================
   void _loadVendor() {
     FirebaseDatabase.instance.ref('vendors/${widget.vendorId}').onValue.listen((
@@ -39,80 +42,80 @@ class _VendorHomepageState extends State<VendorHomepage> {
       if (!event.snapshot.exists) return;
 
       final data = Map<String, dynamic>.from(event.snapshot.value as Map);
-      setState(() {
-        vendorData = data;
-        _findTopMenu(data['menu']);
-      });
+      _findTopMenu(data['menu']);
+
+      setState(() => vendorData = data);
     });
   }
 
+  // =========================
+  // FIND TOP MENU ITEM
+  // =========================
   void _findTopMenu(dynamic menuData) {
     if (menuData == null || menuData is! Map) return;
 
-    Map<String, dynamic>? highest;
+    Map<String, dynamic>? highestItem;
+    int highestCount = -1;
 
     for (var item in menuData.values) {
       if (item is! Map) continue;
 
-      final countRaw = item['orderCount'];
-      final count = countRaw is int
-          ? countRaw
-          : int.tryParse(countRaw?.toString() ?? '0') ?? 0;
+      final rawCount = item['orderCount'];
+      final count = rawCount is int
+          ? rawCount
+          : int.tryParse(rawCount?.toString() ?? '0') ?? 0;
 
-      if (highest == null) {
-        highest = Map<String, dynamic>.from(item);
-        highest['__count'] = count;
-      } else {
-        final highestCount = highest['__count'] ?? 0;
-        if (count > highestCount) {
-          highest = Map<String, dynamic>.from(item);
-          highest['__count'] = count;
-        }
+      if (count > highestCount) {
+        highestCount = count;
+        highestItem = Map<String, dynamic>.from(item);
       }
     }
 
-    setState(() {
-      topMenu = highest;
-    });
+    setState(() => topMenu = highestItem);
   }
 
   // =========================
-  // LOAD ORDERS STATS
+  // LISTEN TO ORDERS
   // =========================
-  void _loadOrders() {
+  void _listenOrders() {
     FirebaseDatabase.instance.ref('orders').onValue.listen((event) {
       int pending = 0;
       int preparing = 0;
       int completed = 0;
-      double sales = 0;
+      double sales = 0.0;
 
       if (event.snapshot.exists) {
         final orders = Map<String, dynamic>.from(event.snapshot.value as Map);
 
-        for (var order in orders.values) {
-          if (order['vendorId'] != widget.vendorId) continue;
+        orders.forEach((_, orderData) {
+          final order = Map<String, dynamic>.from(orderData);
 
-          if (order['status'] == 'Pending') pending++;
-          if (order['status'] == 'Preparing') preparing++;
-          if (order['status'] == 'Completed') {
-            completed++;
-            sales += (order['totalAmount'] ?? 0).toDouble();
+          if (order['vendorId'] != widget.vendorId) return;
+
+          switch (order['status']) {
+            case 'Pending':
+              pending++;
+              break;
+            case 'Preparing':
+              preparing++;
+              break;
+            case 'Completed':
+              completed++;
+              sales += (order['totalAmount'] ?? 0).toDouble();
+              break;
           }
-        }
+        });
       }
 
       setState(() {
         newOrders = pending;
-        inProgressOrders = preparing;
+        preparingOrders = preparing;
         completedOrders = completed;
         todaySales = sales;
       });
     });
   }
 
-  // =========================
-  // UI
-  // =========================
   @override
   Widget build(BuildContext context) {
     if (vendorData == null) {
@@ -127,7 +130,7 @@ class _VendorHomepageState extends State<VendorHomepage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Vendor Name + Location
+              // Vendor info
               Text(
                 vendorData!['name'],
                 style: const TextStyle(
@@ -143,10 +146,10 @@ class _VendorHomepageState extends State<VendorHomepage> {
 
               const SizedBox(height: 20),
 
-              // Top Menu
+              // Top menu
               const Text(
-                "Today's top menu",
-                style: TextStyle(fontWeight: FontWeight.bold),
+                "Today's Top Menu",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
 
@@ -157,14 +160,12 @@ class _VendorHomepageState extends State<VendorHomepage> {
                     children: [
                       Image.asset(
                         topMenu!['menuimage'],
-                        height: 150,
+                        height: 160,
                         width: double.infinity,
                         fit: BoxFit.cover,
                       ),
-
-                      // Dark overlay
                       Container(
-                        height: 150,
+                        height: 160,
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
@@ -176,14 +177,11 @@ class _VendorHomepageState extends State<VendorHomepage> {
                           ),
                         ),
                       ),
-
-                      // Menu name
                       Positioned(
                         bottom: 12,
                         left: 12,
-                        right: 12,
                         child: Text(
-                          topMenu!['name'] ?? '',
+                          topMenu!['name'],
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 20,
@@ -195,32 +193,31 @@ class _VendorHomepageState extends State<VendorHomepage> {
                   ),
                 ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
 
-              // Stats Cards
+              // Dashboard cards
               Expanded(
                 child: GridView.count(
                   crossAxisCount: 2,
-                  mainAxisSpacing: 16,
                   crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
                   children: [
-                    _statCard("New Orders", newOrders.toString(), Icons.add),
-                    _statCard(
-                      "Order In Progress",
-                      inProgressOrders.toString(),
-                      Icons.schedule,
+                    _dashboardCard(
+                      title: "New Orders",
+                      value: newOrders.toString(),
+                      index: 0,
                     ),
-                    _statCard(
-                      "Completed Orders",
-                      completedOrders.toString(),
-                      Icons.check_circle,
+                    _dashboardCard(
+                      title: "Orders In Progress",
+                      value: preparingOrders.toString(),
+                      index: 1,
                     ),
-                    _statCard(
-                      "Today's Sale",
-                      "RM ${todaySales.toStringAsFixed(2)}",
-                      Icons.attach_money,
-                      highlight: true,
+                    _dashboardCard(
+                      title: "Completed Orders",
+                      value: completedOrders.toString(),
+                      index: 2,
                     ),
+                    _salesCard(),
                   ],
                 ),
               ),
@@ -228,15 +225,44 @@ class _VendorHomepageState extends State<VendorHomepage> {
           ),
         ),
       ),
+      bottomNavigationBar: VendorNavigationBar(
+        currentIndex: 0,
+        vendorId: widget.vendorId,
+      ),
     );
   }
 
-  Widget _statCard(
-    String title,
-    String value,
-    IconData icon, {
-    bool highlight = false,
+  // =========================
+  // DASHBOARD CARD
+  // =========================
+  Widget _dashboardCard({
+    required String title,
+    required String value,
+    required int index,
   }) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) =>
+                VendorOrdersPage(vendorId: widget.vendorId, initialTab: index),
+          ),
+        );
+      },
+      child: _cardBase(title, value),
+    );
+  }
+
+  Widget _salesCard() {
+    return _cardBase(
+      "Today's Sales",
+      "RM ${todaySales.toStringAsFixed(2)}",
+      highlight: true,
+    );
+  }
+
+  Widget _cardBase(String title, String value, {bool highlight = false}) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -253,17 +279,15 @@ class _VendorHomepageState extends State<VendorHomepage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: kPrimaryColor),
-          const SizedBox(height: 10),
           Text(
             value,
             style: TextStyle(
-              fontSize: 24,
+              fontSize: 22,
               fontWeight: FontWeight.bold,
               color: highlight ? Colors.green : Colors.black,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Text(title, style: const TextStyle(color: Colors.grey)),
         ],
       ),
