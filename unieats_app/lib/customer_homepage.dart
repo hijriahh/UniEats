@@ -3,6 +3,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'vendor_menu_page.dart';
 import 'customer_navigation_bar.dart';
 import 'ai_chatbot.dart';
+import 'ai_recommendation_widget.dart';
 
 const Color kPrimaryColor = Color(0xFFB7916E); // Brown
 const Color kSecondaryColor = Color.fromARGB(255, 251, 255, 206);
@@ -156,11 +157,21 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
                         style: TextStyle(color: Colors.grey),
                       ),
                     )
-                  : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: filteredVendors.length,
-                      itemBuilder: (context, index) =>
-                          vendorCard(filteredVendors[index]),
+                  : ListView(
+                      children: [
+                        const SizedBox(height: 8),
+
+                        // ⭐ AI Recommendation Widget
+                        AiRecommendationWidget(
+                          selectedCategory: selectedCategory,
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        ...filteredVendors
+                            .map((vendor) => vendorCard(vendor))
+                            .toList(),
+                      ],
                     ),
             ),
           ],
