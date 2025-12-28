@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'auth_service.dart';
 import 'customer_homepage.dart';
+import 'vendor_homepage.dart';
 import 'signup_page.dart';
 import 'forgot_password_page.dart';
 
@@ -28,6 +30,28 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  // ===============================
+  // CHECK IF USER IS A VENDOR
+  // ===============================
+  Future<Map<String, dynamic>?> _getVendorByUid(String uid) async {
+    final snapshot = await FirebaseDatabase.instance.ref('vendors').get();
+
+    if (!snapshot.exists) return null;
+
+    final vendors = Map<String, dynamic>.from(snapshot.value as Map);
+
+    for (final entry in vendors.entries) {
+      final vendorData = Map<String, dynamic>.from(entry.value);
+      if (vendorData['uid'] == uid) {
+        return {'vendorId': entry.key, 'vendorData': vendorData};
+      }
+    }
+    return null;
+  }
+
+  // ===============================
+  // ALERT
+  // ===============================
   void _showAlert(String message) {
     showDialog(
       context: context,
@@ -35,19 +59,17 @@ class _LoginScreenState extends State<LoginScreen> {
         content: Text(message),
         actions: [
           TextButton(
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2), // small padding
-              minimumSize: Size.zero, // remove default min size
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap, // shrink tap target
-            ),
             onPressed: () => Navigator.of(context).pop(),
             child: const Text('OK'),
-          )
+          ),
         ],
       ),
     );
   }
 
+  // ===============================
+  // LOGIN LOGIC
+  // ===============================
   void _loginUser() async {
     String email = _emailController.text.trim();
     String password = _passwordController.text.trim();
@@ -64,15 +86,33 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = false);
 
     if (res == 'success') {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => CustomerHomepage()),
-      );
+      final uid = _authService.getCurrentUser()!.uid;
+
+      final vendorResult = await _getVendorByUid(uid);
+
+      if (vendorResult != null) {
+        // ✅ Vendor
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => VendorHomepage(vendorId: vendorResult['vendorId']),
+          ),
+        );
+      } else {
+        // ✅ Customer
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const CustomerHomepage()),
+        );
+      }
     } else {
       _showAlert(res);
     }
   }
 
+  // ===============================
+  // INPUT DECORATION
+  // ===============================
   InputDecoration _buildInputDecoration(String label) {
     return InputDecoration(
       labelText: label,
@@ -94,6 +134,9 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  // ===============================
+  // UI
+  // ===============================
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
@@ -103,41 +146,16 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Top image with curve
-            Stack(
-              children: [
-                Container(
-                  height: 300,
-                  width: screenWidth,
-                  decoration: const BoxDecoration(
-                    image: DecorationImage(
-                      image: AssetImage('assets/images/landingpage.png'),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
+            // Top Image
+            Container(
+              height: 300,
+              width: screenWidth,
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/images/landingpage.png'),
+                  fit: BoxFit.cover,
                 ),
-                Positioned.fill(
-                  child: Align(
-                    alignment: Alignment.bottomCenter,
-                    child: ClipPath(
-                      clipper: BottomCurveClipper(),
-                      child: Container(
-                        height: 100,
-                        decoration: BoxDecoration(
-                          color: kBackgroundColor,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 10,
-                              offset: const Offset(0, -3),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
 
             Padding(
@@ -155,14 +173,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 30),
 
-                  // Email field
+                  // Email
                   TextField(
                     controller: _emailController,
                     decoration: _buildInputDecoration('Email'),
                   ),
                   const SizedBox(height: 20),
 
-                  // Password field
+                  // Password
                   TextField(
                     controller: _passwordController,
                     obscureText: true,
@@ -178,7 +196,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (_) => const ForgotPasswordScreen()),
+                            builder: (_) => const ForgotPasswordScreen(),
+                          ),
                         );
                       },
                       child: const Text(
@@ -192,7 +211,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Login button
+                  // Login Button
                   _isLoading
                       ? const Center(child: CircularProgressIndicator())
                       : SizedBox(
@@ -200,8 +219,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: kPrimaryColor,
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 20),
+                              padding: const EdgeInsets.symmetric(vertical: 20),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(20),
                               ),
@@ -218,7 +236,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                   const SizedBox(height: 20),
 
-                  // Sign Up link
+                  // Sign Up
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -226,7 +244,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       GestureDetector(
                         onTap: () => Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => RegisterScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const RegisterScreen(),
+                          ),
                         ),
                         child: const Text(
                           "Sign Up",
@@ -235,7 +255,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                      )
+                      ),
                     ],
                   ),
                 ],
@@ -246,36 +266,4 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-}
-
-// -------------------- CURVE CLIPPER --------------------
-class BottomCurveClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    Path path = Path();
-    path.lineTo(0, size.height * 0.4);
-
-    path.quadraticBezierTo(
-      size.width * 0.3,
-      size.height * 0.9,
-      size.width * 0.7,
-      size.height * 0.6,
-    );
-
-    path.quadraticBezierTo(
-      size.width * 0.9,
-      size.height * 0.4,
-      size.width,
-      size.height * 0.8,
-    );
-
-    path.lineTo(size.width, size.height);
-    path.lineTo(0, size.height);
-    path.close();
-
-    return path;
-  }
-
-  @override
-  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }
