@@ -51,11 +51,8 @@ class _AiRecommendationWidgetState extends State<AiRecommendationWidget> {
     vendors.forEach((vendorKey, vendorData) {
       if (vendorData is! Map) return;
 
-      final vendorCategory = vendorData['category'];
-
-      // 🔑 FILTER BY CATEGORY CHIP
       if (widget.selectedCategory != "All" &&
-          vendorCategory != widget.selectedCategory) {
+          vendorData['category'] != widget.selectedCategory) {
         return;
       }
 
@@ -109,7 +106,6 @@ class _AiRecommendationWidgetState extends State<AiRecommendationWidget> {
           ),
         ),
         const SizedBox(height: 10),
-
         SizedBox(
           height: 160,
           child: ListView.builder(
