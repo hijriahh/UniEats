@@ -1,12 +1,12 @@
 class CartItem {
-  final String vendor;
+  final String vendorKey;
   final String name;
   final double price;
   int quantity;
   final String? menuimage; // store image path
 
   CartItem({
-    required this.vendor,
+    required this.vendorKey,
     required this.name,
     required this.price,
     this.quantity = 1,
@@ -21,12 +21,26 @@ class CartModel {
   static List<CartItem> get items => _items;
 
   // Add item to cart
-  static void addItem(String vendor, String name, double price, {String? image}) {
-    final index = _items.indexWhere((item) => item.vendor == vendor && item.name == name);
+  static void addItem(
+    String vendorKey,
+    String name,
+    double price, {
+    String? image,
+  }) {
+    final index = _items.indexWhere(
+      (item) => item.vendorKey == vendorKey && item.name == name,
+    );
     if (index != -1) {
       _items[index].quantity += 1;
     } else {
-      _items.add(CartItem(vendor: vendor, name: name, price: price, menuimage: image));
+      _items.add(
+        CartItem(
+          vendorKey: vendorKey,
+          name: name,
+          price: price,
+          menuimage: image,
+        ),
+      );
     }
   }
 
