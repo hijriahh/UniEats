@@ -164,6 +164,12 @@ class _VendorMenuPageState extends State<VendorMenuPage> {
   Widget build(BuildContext context) {
     final menuItems = widget.vendorData['menu'] as Map<dynamic, dynamic>? ?? {};
 
+    //filter available menu items only
+    final availableItems = menuItems.entries.where((entry) {
+      final item = entry.value as Map;
+      return item['available'] == true;
+    }).toList();
+
     return Scaffold(
       backgroundColor: kBackgroundColor,
       body: Column(
@@ -204,9 +210,10 @@ class _VendorMenuPageState extends State<VendorMenuPage> {
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(12),
-              itemCount: menuItems.length,
+              itemCount: availableItems.length,
               itemBuilder: (context, index) {
-                final item = menuItems.values.elementAt(index);
+                final item =
+                    availableItems[index].value as Map<dynamic, dynamic>;
 
                 final price = item['price'] is num
                     ? item['price'].toDouble()

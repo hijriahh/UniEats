@@ -40,7 +40,7 @@ class _SearchPageState extends State<SearchPage> {
           final menu = vendorData['menu'] as Map;
 
           menu.forEach((menuId, menuData) {
-            if (menuData is Map) {
+            if (menuData is Map && menuData['available'] == true) {
               loadedMenus.add({
                 'menuName': menuData['name'],
                 'image': menuData['menuimage'],
