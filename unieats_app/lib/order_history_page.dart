@@ -2,8 +2,37 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 
-const Color kBackgroundColor = Color(0xFFF6F6F6);
 const Color kPrimaryColor = Color(0xFFB7916E);
+const Color kBackgroundColor = Color(0xFFF6F6F6);
+
+class Order {
+  final String id;
+  final String userId;
+  final String status;
+  final double total;
+  final List<Map<String, dynamic>> items;
+
+  Order({
+    required this.id,
+    required this.userId,
+    required this.status,
+    required this.total,
+    required this.items,
+  });
+
+  factory Order.fromSnapshot(Map<String, dynamic> data, String id) {
+    final itemsData = Map<String, dynamic>.from(data['items'] ?? {});
+    final items = itemsData.values.map((e) => Map<String, dynamic>.from(e)).toList();
+
+    return Order(
+      id: id,
+      userId: data['userId'],
+      status: data['status'] ?? "Accepted",
+      total: (data['total'] as num).toDouble(),
+      items: items,
+    );
+  }
+}
 
 class OrderHistoryPage extends StatefulWidget {
   const OrderHistoryPage({Key? key}) : super(key: key);
@@ -13,65 +42,45 @@ class OrderHistoryPage extends StatefulWidget {
 }
 
 class _OrderHistoryPageState extends State<OrderHistoryPage> {
-  bool _isLoading = true;
-  List<Map<String, dynamic>> _orders = [];
+  List<Order> orders = [];
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _fetchOrders();
+    _fetchUserOrders();
   }
 
-  Future<void> _fetchOrders() async {
+  Future<void> _fetchUserOrders() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      final ref = FirebaseDatabase.instance.ref('orders/${user.uid}');
-      final snapshot = await ref.get();
+    if (user == null) return;
 
-      if (snapshot.exists) {
-        final data = Map<String, dynamic>.from(snapshot.value as Map);
-        final ordersList = data.entries.map((entry) {
-          final order = Map<String, dynamic>.from(entry.value);
-          order['id'] = entry.key; // save order ID
-          return order;
-        }).toList();
+    final snapshot = await FirebaseDatabase.instance
+        .ref('orders')
+        .orderByChild('userId')
+        .equalTo(user.uid)
+        .get();
 
-        // Sort orders by timestamp descending (latest first)
-        ordersList.sort((a, b) => (b['timestamp'] ?? 0).compareTo(a['timestamp'] ?? 0));
-
-        setState(() {
-          _orders = ordersList;
-          _isLoading = false;
-        });
-      } else {
-        setState(() {
-          _orders = [];
-          _isLoading = false;
-        });
-      }
+    if (!snapshot.exists) {
+      setState(() {
+        orders = [];
+        isLoading = false;
+      });
+      return;
     }
+
+    final data = Map<String, dynamic>.from(snapshot.value as Map);
+    final fetchedOrders = data.entries.map((entry) {
+      return Order.fromSnapshot(Map<String, dynamic>.from(entry.value), entry.key);
+    }).toList();
+
+    setState(() {
+      orders = fetchedOrders.reversed.toList(); // newest first
+      isLoading = false;
+    });
   }
 
-  Color _statusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'accepted':
-        return Colors.blue;
-      case 'preparing':
-        return Colors.orange;
-      case 'completed':
-        return Colors.green;
-      case 'cancelled':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  Widget _buildOrderCard(Map<String, dynamic> order) {
-    final date = DateTime.fromMillisecondsSinceEpoch(order['timestamp'] ?? 0);
-    final total = order['total'] ?? 0.0;
-    final status = order['status'] ?? "Unknown";
-
+  Widget _buildOrderCard(Order order) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(16),
@@ -80,7 +89,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -89,44 +98,55 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "Order ID: ${order['id']}",
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            "Date: ${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}",
-            style: const TextStyle(color: Colors.grey),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            "Total: RM ${total.toStringAsFixed(2)}",
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
+          // Header
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              Text(
+                "Order #${order.id.substring(0, 6)}",
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: _statusColor(status).withOpacity(0.2),
+                  color: order.status == "Accepted" ? Colors.green[100] : Colors.orange[100],
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  status,
+                  order.status,
                   style: TextStyle(
-                    color: _statusColor(status),
+                    color: order.status == "Accepted" ? Colors.green[800] : Colors.orange[800],
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
-              const Spacer(),
-              TextButton(
-                onPressed: () {
-                  // TODO: Navigate to order details page if needed
-                },
-                child: const Text("View Details"),
+            ],
+          ),
+          const SizedBox(height: 8),
+
+          // Items
+          ...order.items.map((item) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text("${item['quantity']}x ${item['name']}"),
+                    Text("\$${(item['price'] * item['quantity']).toStringAsFixed(2)}"),
+                  ],
+                ),
+              )),
+
+          const Divider(height: 20, thickness: 1),
+          // Total
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "Total",
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
+              Text("\$${order.total.toStringAsFixed(2)}",
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
             ],
           ),
         ],
@@ -139,32 +159,24 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
     return Scaffold(
       backgroundColor: kBackgroundColor,
       appBar: AppBar(
+        title: const Text("Order History"),
         backgroundColor: Colors.white,
         elevation: 0,
-        title: const Text(
-          "Order History",
-          style: TextStyle(color: Colors.brown, fontWeight: FontWeight.bold),
-        ),
+        centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.brown),
           onPressed: () => Navigator.pop(context),
         ),
-        centerTitle: true,
       ),
-      body: _isLoading
+      body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : _orders.isEmpty
-              ? const Center(
-                  child: Text(
-                    "You have no orders yet.",
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
-                  ),
-                )
+          : orders.isEmpty
+              ? const Center(child: Text("No orders found"))
               : ListView.builder(
                   padding: const EdgeInsets.only(top: 16, bottom: 16),
-                  itemCount: _orders.length,
+                  itemCount: orders.length,
                   itemBuilder: (context, index) {
-                    return _buildOrderCard(_orders[index]);
+                    return _buildOrderCard(orders[index]);
                   },
                 ),
     );
