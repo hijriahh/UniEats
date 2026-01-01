@@ -1,34 +1,72 @@
 import 'package:flutter/material.dart';
 import 'customer_navigation_bar.dart';
-import 'cart_page.dart';
 import 'models/cart_model.dart';
+import 'order_success_page.dart';
+
 
 const Color kPrimaryColor = Color(0xFFB7916E);
 const Color kBackgroundColor = Color(0xFFF6F6F6);
 
-class PaymentPage extends StatelessWidget {
+class PaymentPage extends StatefulWidget {
   const PaymentPage({Key? key}) : super(key: key);
 
-  void _showConfirmation(BuildContext context, String method) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Payment Successful'),
-        content: Text('Your payment by $method has been received!'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // close dialog
-              CartModel.clear(); // clear cart after payment
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const CartPage()),
-                (route) => false,
-              );
-            },
-            child: const Text('OK'),
+  @override
+  State<PaymentPage> createState() => _PaymentPageState();
+}
+
+class _PaymentPageState extends State<PaymentPage> {
+  String selectedMethod = '';
+
+  Widget _paymentOption({
+    required String method,
+    required IconData icon,
+  }) {
+    final isSelected = selectedMethod == method;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          selectedMethod = method;
+        });
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? kPrimaryColor : Colors.transparent,
+            width: 2,
           ),
-        ],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            CircleAvatar(
+              backgroundColor: kPrimaryColor.withOpacity(0.15),
+              child: Icon(icon, color: kPrimaryColor),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                method,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            if (isSelected)
+              const Icon(Icons.check_circle, color: kPrimaryColor),
+          ],
+        ),
       ),
     );
   }
@@ -44,31 +82,112 @@ class PaymentPage extends StatelessWidget {
         elevation: 0,
         title: const Text(
           'Payment',
-          style: TextStyle(color: Colors.brown, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.brown,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         iconTheme: const IconThemeData(color: Colors.brown),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Total Amount: RM ${total.toStringAsFixed(2)}',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            // Total Amount Card
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Total Amount',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'RM ${total.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: kPrimaryColor,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 24),
-            ListTile(
-              leading: const Icon(Icons.credit_card, color: kPrimaryColor),
-              title: const Text('Pay with Card'),
-              trailing: const Icon(Icons.arrow_forward_ios),
-              onTap: () => _showConfirmation(context, 'Card'),
+
+            const SizedBox(height: 32),
+
+            const Text(
+              'Choose Payment Method',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            const SizedBox(height: 12),
-            ListTile(
-              leading: const Icon(Icons.money, color: kPrimaryColor),
-              title: const Text('Pay with Cash'),
-              trailing: const Icon(Icons.arrow_forward_ios),
-              onTap: () => _showConfirmation(context, 'Cash'),
+
+            const SizedBox(height: 16),
+
+            _paymentOption(
+              method: 'Online Banking',
+              icon: Icons.account_balance,
+            ),
+
+            _paymentOption(
+              method: 'Credit / Debit Card',
+              icon: Icons.credit_card,
+            ),
+
+            _paymentOption(
+              method: 'Pay at Counter',
+              icon: Icons.money,
+            ),
+
+            const Spacer(),
+
+            // Confirm Button
+            SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: ElevatedButton(
+                onPressed: selectedMethod.isEmpty
+                ? null
+                : () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => OrderSuccessPage(
+                          total: CartModel.totalPrice,
+                          paymentMethod: selectedMethod,
+                        ),
+                      ),
+                    );
+                  },
+
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kPrimaryColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: const Text(
+                  'Confirm Payment',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+              ),
             ),
           ],
         ),
