@@ -8,7 +8,7 @@ const Color kBackgroundColor = Color(0xFFF6F6F6);
 
 class VendorMenuPage extends StatefulWidget {
   final Map<String, dynamic> vendorData;
-  final String vendorKey; // ✅ ADD THIS
+  final String vendorKey;
 
   const VendorMenuPage({
     Key? key,
@@ -23,41 +23,49 @@ class VendorMenuPage extends StatefulWidget {
 class _VendorMenuPageState extends State<VendorMenuPage> {
   int _currentIndex = 0;
 
+  // SAFE IMAGE HANDLER
+  Widget _menuImage(String? path) {
+    if (path == null || path.isEmpty) {
+      return Container(
+        width: 80,
+        height: 80,
+        decoration: BoxDecoration(
+          color: kSecondaryColor,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: const Icon(Icons.fastfood, color: Colors.white, size: 32),
+      );
+    }
+
+    return Image.asset(path, width: 80, height: 80, fit: BoxFit.cover);
+  }
+
+  // ADD TO CART POPUP
   void _showMenuPopup(Map<dynamic, dynamic> item) {
     int quantity = 1;
-    double priceValue = 0;
 
-    if (item['price'] is num) {
-      priceValue = item['price'].toDouble();
-    } else if (item['price'] is String) {
-      priceValue = double.tryParse(item['price'].replaceAll("RM", "")) ?? 0;
-    }
+    final price = item['price'] is num
+        ? item['price'].toDouble()
+        : double.tryParse(item['price']?.toString() ?? '0') ?? 0;
 
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (_) {
         return StatefulBuilder(
-          builder: (context, setStateDialog) {
+          builder: (context, setDialogState) {
             return Dialog(
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(20),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (item['menuimage'] != null &&
-                        item['menuimage'].isNotEmpty)
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.asset(
-                          item['menuimage'],
-                          width: 180,
-                          height: 180,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: _menuImage(item['menuimage']),
+                    ),
                     const SizedBox(height: 12),
 
                     Text(
@@ -68,74 +76,79 @@ class _VendorMenuPageState extends State<VendorMenuPage> {
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 8),
+
+                    const SizedBox(height: 6),
 
                     Text(
-                      "RM ${priceValue.toStringAsFixed(2)}",
+                      "RM ${price.toStringAsFixed(2)}",
                       style: const TextStyle(
                         fontSize: 18,
                         color: kPrimaryColor,
                       ),
                     ),
+
                     const SizedBox(height: 16),
 
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Row(
-                          children: [
-                            IconButton(
-                              onPressed: () {
-                                if (quantity > 1) {
-                                  setStateDialog(() => quantity--);
-                                }
-                              },
-                              icon: const Icon(Icons.remove_circle_outline),
-                              color: kPrimaryColor,
-                              iconSize: 30,
-                            ),
-                            Text(
-                              quantity.toString(),
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            IconButton(
-                              onPressed: () => setStateDialog(() => quantity++),
-                              icon: const Icon(Icons.add_circle_outline),
-                              color: kPrimaryColor,
-                              iconSize: 30,
-                            ),
-                          ],
-                        ),
-
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: kPrimaryColor,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12,
-                            ),
-                          ),
+                        IconButton(
+                          icon: const Icon(Icons.remove_circle_outline),
+                          color: kPrimaryColor,
                           onPressed: () {
+                            if (quantity > 1) {
+                              setDialogState(() => quantity--);
+                            }
+                          },
+                        ),
+                        Text(
+                          quantity.toString(),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.add_circle_outline),
+                          color: kPrimaryColor,
+                          onPressed: () => setDialogState(() => quantity++),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: kPrimaryColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        onPressed: () {
+                          for (int i = 0; i < quantity; i++) {
                             CartModel.addItem(
                               widget.vendorKey,
                               item['name'],
-                              priceValue,
+                              price,
                               image: item['menuimage'],
                             );
+                          }
 
-                            Navigator.pop(context);
-                            setState(() {});
-                          },
-                          child: const Text("Add to Cart"),
+                          Navigator.pop(context);
+                          setState(() {});
+                        },
+                        child: const Text(
+                          "Add to Cart",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ],
+                      ),
                     ),
                   ],
                 ),
@@ -155,7 +168,7 @@ class _VendorMenuPageState extends State<VendorMenuPage> {
       backgroundColor: kBackgroundColor,
       body: Column(
         children: [
-          // Banner
+          // VENDOR BANNER
           Stack(
             children: [
               Container(
@@ -187,9 +200,10 @@ class _VendorMenuPageState extends State<VendorMenuPage> {
             ],
           ),
 
+          // MENU LIST (CARD UI)
           Expanded(
             child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
+              padding: const EdgeInsets.all(12),
               itemCount: menuItems.length,
               itemBuilder: (context, index) {
                 final item = menuItems.values.elementAt(index);
@@ -198,12 +212,58 @@ class _VendorMenuPageState extends State<VendorMenuPage> {
                     ? item['price'].toDouble()
                     : double.tryParse(item['price']?.toString() ?? '0') ?? 0;
 
-                return ListTile(
-                  title: Text(item['name'] ?? ''),
-                  subtitle: Text("RM ${price.toStringAsFixed(2)}"),
-                  trailing: ElevatedButton(
-                    onPressed: () => _showMenuPopup(item),
-                    child: const Text("Add"),
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(14),
+                        child: _menuImage(item['menuimage']),
+                      ),
+                      const SizedBox(width: 12),
+
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item['name'] ?? '',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              "RM ${price.toStringAsFixed(2)}",
+                              style: const TextStyle(
+                                color: kPrimaryColor,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      IconButton(
+                        icon: const Icon(Icons.add_circle_outline),
+                        color: kPrimaryColor,
+                        iconSize: 30,
+                        onPressed: () => _showMenuPopup(item),
+                      ),
+                    ],
                   ),
                 );
               },
