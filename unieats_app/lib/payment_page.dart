@@ -25,7 +25,7 @@ class _PaymentPageState extends State<PaymentPage> {
     final cartItems = CartModel.items;
     if (cartItems.isEmpty) return;
 
-    final vendorId = cartItems.first.vendorKey;
+    final vendorKey = cartItems.first.vendorKey;
 
     double total = 0;
     final items = cartItems.map((item) {
@@ -38,7 +38,7 @@ class _PaymentPageState extends State<PaymentPage> {
     }).toList();
 
     await FirebaseDatabase.instance.ref('orders').push().set({
-      'vendorId': vendorId,
+      'vendorId': vendorKey,
       'customerId': user.uid,
       'paymentMethod': selectedMethod,
       'status': 'Pending', // Vendor will Accept / Reject
