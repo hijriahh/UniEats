@@ -127,9 +127,7 @@ class _VendorOrdersPageState extends State<VendorOrdersPage>
       itemBuilder: (context, index) {
         final order = list[index];
 
-        // ✅ FIX: items is a MAP, not a List
-        final itemsMap = order['items'] as Map<dynamic, dynamic>? ?? {};
-        final items = itemsMap.values.toList();
+        final List items = (order['items'] as List?) ?? [];
 
         return Container(
           margin: const EdgeInsets.only(bottom: 14),
