@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'customer_navigation_bar.dart';
 import 'models/cart_model.dart';
 import 'order_success_page.dart';
-
 
 const Color kPrimaryColor = Color(0xFFB7916E);
 const Color kBackgroundColor = Color(0xFFF6F6F6);
@@ -17,10 +18,38 @@ class PaymentPage extends StatefulWidget {
 class _PaymentPageState extends State<PaymentPage> {
   String selectedMethod = '';
 
-  Widget _paymentOption({
-    required String method,
-    required IconData icon,
-  }) {
+  Future<void> _createOrder() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final cartItems = CartModel.items;
+    if (cartItems.isEmpty) return;
+
+    // ⚠️ assume single-vendor cart (as per UniEats design)
+    final vendorId = cartItems.first.vendor;
+
+    double total = 0;
+    final items = cartItems.map((item) {
+      total += item.price * item.quantity;
+      return {
+        'name': item.name,
+        'price': item.price,
+        'quantity': item.quantity,
+      };
+    }).toList();
+
+    await FirebaseDatabase.instance.ref('orders').push().set({
+      'vendorId': vendorId,
+      'customerId': user.uid,
+      'paymentMethod': selectedMethod,
+      'status': 'Pending', // Vendor will Accept / Reject
+      'totalAmount': total,
+      'items': items,
+      'createdAt': ServerValue.timestamp,
+    });
+  }
+
+  Widget _paymentOption({required String method, required IconData icon}) {
     final isSelected = selectedMethod == method;
 
     return GestureDetector(
@@ -82,10 +111,7 @@ class _PaymentPageState extends State<PaymentPage> {
         elevation: 0,
         title: const Text(
           'Payment',
-          style: TextStyle(
-            color: Colors.brown,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.brown, fontWeight: FontWeight.bold),
         ),
         iconTheme: const IconThemeData(color: Colors.brown),
       ),
@@ -133,10 +159,7 @@ class _PaymentPageState extends State<PaymentPage> {
 
             const Text(
               'Choose Payment Method',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
 
             const SizedBox(height: 16),
@@ -151,10 +174,7 @@ class _PaymentPageState extends State<PaymentPage> {
               icon: Icons.credit_card,
             ),
 
-            _paymentOption(
-              method: 'Pay at Counter',
-              icon: Icons.money,
-            ),
+            _paymentOption(method: 'Pay at Counter', icon: Icons.money),
 
             const Spacer(),
 
@@ -164,18 +184,21 @@ class _PaymentPageState extends State<PaymentPage> {
               height: 55,
               child: ElevatedButton(
                 onPressed: selectedMethod.isEmpty
-                ? null
-                : () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => OrderSuccessPage(
-                          total: CartModel.totalPrice,
-                          paymentMethod: selectedMethod,
-                        ),
-                      ),
-                    );
-                  },
+                    ? null
+                    : () async {
+                        await _createOrder();
+                        CartModel.clear();
+
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => OrderSuccessPage(
+                              total: CartModel.totalPrice,
+                              paymentMethod: selectedMethod,
+                            ),
+                          ),
+                        );
+                      },
 
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimaryColor,
@@ -185,7 +208,11 @@ class _PaymentPageState extends State<PaymentPage> {
                 ),
                 child: const Text(
                   'Confirm Payment',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),
