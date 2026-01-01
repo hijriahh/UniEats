@@ -185,6 +185,8 @@ class _PaymentPageState extends State<PaymentPage> {
                 onPressed: selectedMethod.isEmpty
                     ? null
                     : () async {
+                        final double paidTotal = CartModel.totalPrice;
+
                         await _createOrder();
                         CartModel.clear();
 
@@ -192,7 +194,7 @@ class _PaymentPageState extends State<PaymentPage> {
                           context,
                           MaterialPageRoute(
                             builder: (_) => OrderSuccessPage(
-                              total: CartModel.totalPrice,
+                              total: paidTotal,
                               paymentMethod: selectedMethod,
                             ),
                           ),
