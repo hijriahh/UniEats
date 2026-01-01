@@ -49,7 +49,6 @@ class _VendorOrdersPageState extends State<VendorOrdersPage>
           if (orderData is Map) {
             final order = Map<String, dynamic>.from(orderData);
 
-            // ✅ vendorId MATCHING (DO NOT CHANGE)
             if (order['vendorId'] == widget.vendorId) {
               loaded.add({'orderId': orderId, ...order});
             }
