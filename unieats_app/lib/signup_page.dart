@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'auth_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'login_page.dart';
 
 const Color kPrimaryColor = Color(0xFFA07F60);
@@ -18,7 +19,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
-  final AuthService _authService = AuthService();
+
   bool _isLoading = false;
 
   @override
@@ -30,86 +31,75 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
-  void _registerUser() async {
+  Future<void> _registerUser() async {
     String name = _nameController.text.trim();
     String email = _emailController.text.trim();
     String password = _passwordController.text.trim();
     String confirmPassword = _confirmPasswordController.text.trim();
 
     if (name.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          content: const SizedBox(
-            width: 200,
-            child: Text('Please fill in all fields.'),
-          ),
-          actions: [
-            TextButton(
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('OK'),
-            ),
-          ],
-        ),
-      );
+      _showDialog('Please fill in all fields.');
       return;
     }
 
     if (password != confirmPassword) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          content: const SizedBox(
-            width: 200,
-            child: Text('Passwords do not match.'),
-          ),
-          actions: [
-            TextButton(
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('OK'),
-            ),
-          ],
-        ),
-      );
+      _showDialog('Passwords do not match.');
       return;
     }
 
     setState(() => _isLoading = true);
 
-    String res = await _authService.registerUser(email, password);
+    try {
+      // 1️⃣ Register user with Firebase Auth
+      UserCredential userCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(email: email, password: password);
 
-    setState(() => _isLoading = false);
+      final user = userCredential.user;
+      if (user != null) {
+        // 2️⃣ Update display name in Auth
+        await user.updateDisplayName(name);
 
-    if (res == 'success') {
+        // 3️⃣ Save user info to Realtime Database
+        final ref = FirebaseDatabase.instance.ref().child('users/${user.uid}');
+        await ref.set({
+          'name': name,
+          'email': email,
+          // 'profileImage': '', // optional later
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Registration successful!')),
+        );
+
+        // Navigate to Login Screen
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      String message = e.message ?? 'An error occurred';
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registration successful!')),
+        SnackBar(content: Text(message)),
       );
-
-      // Optional: save display name
-      try {
-        var user = _authService.getCurrentUser();
-        if (user != null) await user.updateDisplayName(name);
-      } catch (e) {}
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(res)),
-      );
+    } finally {
+      setState(() => _isLoading = false);
     }
+  }
+
+  void _showDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        content: SizedBox(width: 200, child: Text(message)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   InputDecoration _buildInputDecoration(String label) {
@@ -170,6 +160,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ],
             ),
+
             Padding(
               padding: const EdgeInsets.all(30),
               child: Column(
@@ -186,33 +177,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const SizedBox(height: 5),
 
                   // Name
-                  TextField(
-                    controller: _nameController,
-                    decoration: _buildInputDecoration('Name'),
-                  ),
+                  TextField(controller: _nameController, decoration: _buildInputDecoration('Name')),
                   const SizedBox(height: 5),
 
                   // Email
-                  TextField(
-                    controller: _emailController,
-                    decoration: _buildInputDecoration('Email'),
-                  ),
+                  TextField(controller: _emailController, decoration: _buildInputDecoration('Email')),
                   const SizedBox(height: 5),
 
                   // Password
-                  TextField(
-                    controller: _passwordController,
-                    obscureText: true,
-                    decoration: _buildInputDecoration('Password'),
-                  ),
+                  TextField(controller: _passwordController, obscureText: true, decoration: _buildInputDecoration('Password')),
                   const SizedBox(height: 5),
 
                   // Confirm Password
-                  TextField(
-                    controller: _confirmPasswordController,
-                    obscureText: true,
-                    decoration: _buildInputDecoration('Confirm Password'),
-                  ),
+                  TextField(controller: _confirmPasswordController, obscureText: true, decoration: _buildInputDecoration('Confirm Password')),
                   const SizedBox(height: 30),
 
                   // Sign Up button
@@ -249,10 +226,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                         child: const Text(
                           "Log In",
-                          style: TextStyle(
-                            color: kPrimaryColor,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: TextStyle(color: kPrimaryColor, fontWeight: FontWeight.bold),
                         ),
                       )
                     ],
