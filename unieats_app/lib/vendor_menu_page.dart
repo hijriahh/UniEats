@@ -123,7 +123,6 @@ class _VendorMenuPageState extends State<VendorMenuPage> {
                             ),
                           ),
                           onPressed: () {
-                            // ✅ FIX: USE vendorKey
                             CartModel.addItem(
                               widget.vendorKey,
                               item['name'],
