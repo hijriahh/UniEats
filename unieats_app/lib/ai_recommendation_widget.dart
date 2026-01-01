@@ -48,7 +48,7 @@ class _AiRecommendationWidgetState extends State<AiRecommendationWidget> {
     final vendors = Map<String, dynamic>.from(snapshot.value as Map);
     List<Map<String, dynamic>> items = [];
 
-    vendors.forEach((_, vendorData) {
+    vendors.forEach((vendorKey, vendorData) {
       if (vendorData is! Map) return;
 
       final vendorCategory = vendorData['category'];
@@ -71,6 +71,7 @@ class _AiRecommendationWidgetState extends State<AiRecommendationWidget> {
               "menuImage": menuData['menuimage'],
               "orderCount": menuData['orderCount'],
               "vendorData": vendorData,
+              "vendorKey": vendorKey,
             });
           }
         });
@@ -127,6 +128,7 @@ class _AiRecommendationWidgetState extends State<AiRecommendationWidget> {
                         vendorData: Map<String, dynamic>.from(
                           item['vendorData'],
                         ),
+                        vendorKey: item['vendorKey'],
                       ),
                     ),
                   );

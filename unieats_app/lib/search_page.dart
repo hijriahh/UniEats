@@ -43,10 +43,11 @@ class _SearchPageState extends State<SearchPage> {
             if (menuData is Map) {
               loadedMenus.add({
                 'menuName': menuData['name'],
-                'image': menuData['menuimage'], 
+                'image': menuData['menuimage'],
                 'price': menuData['price'],
                 'vendorName': vendorName,
                 'vendorData': Map<String, dynamic>.from(vendorData),
+                'vendorKey': vendorId,
               });
             }
           });
@@ -60,10 +61,7 @@ class _SearchPageState extends State<SearchPage> {
   List<Map<String, dynamic>> get filteredMenu {
     if (searchQuery.isEmpty) return [];
     return menuList.where((item) {
-      return item['menuName']
-          .toString()
-          .toLowerCase()
-          .contains(searchQuery);
+      return item['menuName'].toString().toLowerCase().contains(searchQuery);
     }).toList();
   }
 
@@ -74,12 +72,7 @@ class _SearchPageState extends State<SearchPage> {
 
     try {
       // Use Image.asset for local assets
-      return Image.asset(
-        imagePath,
-        width: 70,
-        height: 70,
-        fit: BoxFit.cover,
-      );
+      return Image.asset(imagePath, width: 70, height: 70, fit: BoxFit.cover);
     } catch (_) {
       return _imagePlaceholder();
     }
@@ -123,7 +116,7 @@ class _SearchPageState extends State<SearchPage> {
                     color: Colors.grey.withOpacity(0.2),
                     blurRadius: 6,
                     offset: const Offset(0, 3),
-                  )
+                  ),
                 ],
               ),
               child: TextField(
@@ -159,8 +152,10 @@ class _SearchPageState extends State<SearchPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) =>
-                                  VendorMenuPage(vendorData: item['vendorData']),
+                              builder: (_) => VendorMenuPage(
+                                vendorData: item['vendorData'],
+                                vendorKey: item['vendorKey'],
+                              ),
                             ),
                           );
                         },
@@ -175,7 +170,7 @@ class _SearchPageState extends State<SearchPage> {
                                 color: Colors.grey.withOpacity(0.2),
                                 blurRadius: 6,
                                 offset: const Offset(0, 3),
-                              )
+                              ),
                             ],
                           ),
                           child: Row(
@@ -195,18 +190,23 @@ class _SearchPageState extends State<SearchPage> {
                                     Text(
                                       item['menuName'] ?? '',
                                       style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
                                       item['vendorName'] ?? '',
-                                      style: const TextStyle(color: Colors.grey),
+                                      style: const TextStyle(
+                                        color: Colors.grey,
+                                      ),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
                                       "RM ${item['price'] ?? ''}",
-                                      style: const TextStyle(color: kPrimaryColor),
+                                      style: const TextStyle(
+                                        color: kPrimaryColor,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -220,8 +220,7 @@ class _SearchPageState extends State<SearchPage> {
           ),
         ],
       ),
-      bottomNavigationBar:
-          CustomerNavigationBar(currentIndex: _currentIndex),
+      bottomNavigationBar: CustomerNavigationBar(currentIndex: _currentIndex),
     );
   }
 }

@@ -58,13 +58,14 @@ class _CartPageState extends State<CartPage> {
                               color: Colors.grey.withOpacity(0.15),
                               blurRadius: 6,
                               offset: const Offset(0, 3),
-                            )
+                            ),
                           ],
                         ),
                         child: Row(
                           children: [
                             // Image like vendor menu
-                            if (item.menuimage != null && item.menuimage!.isNotEmpty)
+                            if (item.menuimage != null &&
+                                item.menuimage!.isNotEmpty)
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(16),
                                 child: Image.asset(
@@ -90,25 +91,56 @@ class _CartPageState extends State<CartPage> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(item.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                                  Text(item.vendor, style: const TextStyle(color: Colors.grey)),
+                                  Text(
+                                    item.name,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text(
+                                    "Vendor",
+                                    style: const TextStyle(color: Colors.grey),
+                                  ),
                                   const SizedBox(height: 4),
-                                  Text("RM ${(item.price * item.quantity).toStringAsFixed(2)}",
-                                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                                  Text(
+                                    "RM ${(item.price * item.quantity).toStringAsFixed(2)}",
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
                             Row(
                               children: [
                                 IconButton(
-                                  icon: const Icon(Icons.remove_circle_outline, color: Colors.brown),
-                                  onPressed: () => setState(() => CartModel.decreaseItem(item)),
+                                  icon: const Icon(
+                                    Icons.remove_circle_outline,
+                                    color: Colors.brown,
+                                  ),
+                                  onPressed: () => setState(
+                                    () => CartModel.decreaseItem(item),
+                                  ),
                                 ),
-                                Text(item.quantity.toString(), style: const TextStyle(fontWeight: FontWeight.bold)),
+                                Text(
+                                  item.quantity.toString(),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                                 IconButton(
-                                  icon: const Icon(Icons.add_circle_outline, color: Colors.brown),
-                                  onPressed: () => setState(() =>
-                                      CartModel.addItem(item.vendor, item.name, item.price, image: item.menuimage)),
+                                  icon: const Icon(
+                                    Icons.add_circle_outline,
+                                    color: Colors.brown,
+                                  ),
+                                  onPressed: () => setState(
+                                    () => CartModel.addItem(
+                                      item.vendorKey,
+                                      item.name,
+                                      item.price,
+                                      image: item.menuimage,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
@@ -129,7 +161,7 @@ class _CartPageState extends State<CartPage> {
                         color: Colors.grey.withOpacity(0.15),
                         blurRadius: 6,
                         offset: const Offset(0, -3),
-                      )
+                      ),
                     ],
                   ),
                   child: Row(
@@ -137,29 +169,44 @@ class _CartPageState extends State<CartPage> {
                     children: [
                       Text(
                         "Total: RM ${CartModel.totalPrice.toStringAsFixed(2)}",
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: kPrimaryColor,
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: kPrimaryColor,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const PaymentPage(),
+                            ),
+                          );
+                        },
+                        child: const Text(
+                          "Checkout",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const PaymentPage()),
-                        );
-                      },
-                      child: const Text("Checkout", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-                    ),
                     ],
                   ),
                 ),
               ],
             ),
-            bottomNavigationBar: CustomerNavigationBar(currentIndex: _currentIndex),
-
+      bottomNavigationBar: CustomerNavigationBar(currentIndex: _currentIndex),
     );
   }
 }

@@ -37,7 +37,11 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
       }
       final List<Map<String, dynamic>> loaded = [];
       data.forEach((key, value) {
-        if (value is Map) loaded.add(Map<String, dynamic>.from(value));
+        if (value is Map) {
+          final vendor = Map<String, dynamic>.from(value);
+          vendor['vendorKey'] = key;
+          loaded.add(vendor);
+        }
       });
       setState(() => vendors = loaded);
     });
@@ -284,7 +288,10 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => VendorMenuPage(vendorData: vendor),
+              builder: (_) => VendorMenuPage(
+                vendorData: vendor,
+                vendorKey: vendor['vendorKey'],
+              ),
             ),
           );
         },
