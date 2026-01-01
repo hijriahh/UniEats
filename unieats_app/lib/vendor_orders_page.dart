@@ -42,14 +42,17 @@ class _VendorOrdersPageState extends State<VendorOrdersPage>
     FirebaseDatabase.instance.ref('orders').onValue.listen((event) {
       final List<Map<String, dynamic>> loaded = [];
 
-      if (event.snapshot.exists) {
+      if (event.snapshot.exists && event.snapshot.value is Map) {
         final data = Map<String, dynamic>.from(event.snapshot.value as Map);
 
         data.forEach((orderId, orderData) {
-          final order = Map<String, dynamic>.from(orderData);
+          if (orderData is Map) {
+            final order = Map<String, dynamic>.from(orderData);
 
-          if (order['vendorId'] == widget.vendorId) {
-            loaded.add({'orderId': orderId, ...order});
+            // ✅ vendorId MATCHING (DO NOT CHANGE)
+            if (order['vendorId'] == widget.vendorId) {
+              loaded.add({'orderId': orderId, ...order});
+            }
           }
         });
       }
@@ -59,7 +62,7 @@ class _VendorOrdersPageState extends State<VendorOrdersPage>
   }
 
   // =========================
-  // FILTER ORDERS
+  // FILTER ORDERS BY STATUS
   // =========================
   List<Map<String, dynamic>> _filterOrders(String status) {
     return orders.where((o) => o['status'] == status).toList();
@@ -124,7 +127,10 @@ class _VendorOrdersPageState extends State<VendorOrdersPage>
       itemCount: list.length,
       itemBuilder: (context, index) {
         final order = list[index];
-        final items = order['items'] as List<dynamic>? ?? [];
+
+        // ✅ FIX: items is a MAP, not a List
+        final itemsMap = order['items'] as Map<dynamic, dynamic>? ?? {};
+        final items = itemsMap.values.toList();
 
         return Container(
           margin: const EdgeInsets.only(bottom: 14),
