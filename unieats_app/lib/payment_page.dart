@@ -25,8 +25,7 @@ class _PaymentPageState extends State<PaymentPage> {
     final cartItems = CartModel.items;
     if (cartItems.isEmpty) return;
 
-    // ⚠️ assume single-vendor cart (as per UniEats design)
-    final vendorId = cartItems.first.vendor;
+    final vendorId = cartItems.first.vendorKey;
 
     double total = 0;
     final items = cartItems.map((item) {
