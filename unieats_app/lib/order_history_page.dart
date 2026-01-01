@@ -21,14 +21,17 @@ class Order {
   });
 
   factory Order.fromSnapshot(Map<String, dynamic> data, String id) {
-    final itemsData = Map<String, dynamic>.from(data['items'] ?? {});
-    final items = itemsData.values.map((e) => Map<String, dynamic>.from(e)).toList();
+    final List rawItems = data['items'] as List? ?? [];
+
+    final items = rawItems
+        .map((e) => Map<String, dynamic>.from(e as Map))
+        .toList();
 
     return Order(
       id: id,
-      userId: data['userId'],
-      status: data['status'] ?? "Accepted",
-      total: (data['total'] as num).toDouble(),
+      userId: data['customerId'],
+      status: data['status'] ?? "Pending",
+      total: (data['totalAmount'] as num).toDouble(),
       items: items,
     );
   }
@@ -57,7 +60,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
 
     final snapshot = await FirebaseDatabase.instance
         .ref('orders')
-        .orderByChild('userId')
+        .orderByChild('customerId')
         .equalTo(user.uid)
         .get();
 
@@ -71,7 +74,10 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
 
     final data = Map<String, dynamic>.from(snapshot.value as Map);
     final fetchedOrders = data.entries.map((entry) {
-      return Order.fromSnapshot(Map<String, dynamic>.from(entry.value), entry.key);
+      return Order.fromSnapshot(
+        Map<String, dynamic>.from(entry.value),
+        entry.key,
+      );
     }).toList();
 
     setState(() {
@@ -104,18 +110,28 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
             children: [
               Text(
                 "Order #${order.id.substring(0, 6)}",
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
-                  color: order.status == "Accepted" ? Colors.green[100] : Colors.orange[100],
+                  color: order.status == "Accepted"
+                      ? Colors.green[100]
+                      : Colors.orange[100],
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   order.status,
                   style: TextStyle(
-                    color: order.status == "Accepted" ? Colors.green[800] : Colors.orange[800],
+                    color: order.status == "Accepted"
+                        ? Colors.green[800]
+                        : Colors.orange[800],
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -125,16 +141,20 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
           const SizedBox(height: 8),
 
           // Items
-          ...order.items.map((item) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text("${item['quantity']}x ${item['name']}"),
-                    Text("\$${(item['price'] * item['quantity']).toStringAsFixed(2)}"),
-                  ],
-                ),
-              )),
+          ...order.items.map(
+            (item) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("${item['quantity']}x ${item['name']}"),
+                  Text(
+                    "\$${(item['price'] * item['quantity']).toStringAsFixed(2)}",
+                  ),
+                ],
+              ),
+            ),
+          ),
 
           const Divider(height: 20, thickness: 1),
           // Total
@@ -145,8 +165,10 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                 "Total",
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
-              Text("\$${order.total.toStringAsFixed(2)}",
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text(
+                "\$${order.total.toStringAsFixed(2)}",
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
             ],
           ),
         ],
@@ -171,14 +193,14 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : orders.isEmpty
-              ? const Center(child: Text("No orders found"))
-              : ListView.builder(
-                  padding: const EdgeInsets.only(top: 16, bottom: 16),
-                  itemCount: orders.length,
-                  itemBuilder: (context, index) {
-                    return _buildOrderCard(orders[index]);
-                  },
-                ),
+          ? const Center(child: Text("No orders found"))
+          : ListView.builder(
+              padding: const EdgeInsets.only(top: 16, bottom: 16),
+              itemCount: orders.length,
+              itemBuilder: (context, index) {
+                return _buildOrderCard(orders[index]);
+              },
+            ),
     );
   }
 }
