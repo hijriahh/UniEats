@@ -30,16 +30,11 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  // ===============================
-  // CHECK IF USER IS A VENDOR
-  // ===============================
   Future<Map<String, dynamic>?> _getVendorByUid(String uid) async {
     final snapshot = await FirebaseDatabase.instance.ref('vendors').get();
-
     if (!snapshot.exists) return null;
 
     final vendors = Map<String, dynamic>.from(snapshot.value as Map);
-
     for (final entry in vendors.entries) {
       final vendorData = Map<String, dynamic>.from(entry.value);
       if (vendorData['uid'] == uid) {
@@ -49,9 +44,6 @@ class _LoginScreenState extends State<LoginScreen> {
     return null;
   }
 
-  // ===============================
-  // ALERT
-  // ===============================
   void _showAlert(String message) {
     showDialog(
       context: context,
@@ -67,9 +59,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // ===============================
-  // LOGIN LOGIC
-  // ===============================
   void _loginUser() async {
     String email = _emailController.text.trim();
     String password = _passwordController.text.trim();
@@ -80,18 +69,14 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     setState(() => _isLoading = true);
-
     String res = await _authService.loginUser(email, password);
-
     setState(() => _isLoading = false);
 
     if (res == 'success') {
       final uid = _authService.getCurrentUser()!.uid;
-
       final vendorResult = await _getVendorByUid(uid);
 
       if (vendorResult != null) {
-        // ✅ Vendor
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -99,7 +84,6 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         );
       } else {
-        // ✅ Customer
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const CustomerHomepage()),
@@ -110,9 +94,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // ===============================
-  // INPUT DECORATION
-  // ===============================
   InputDecoration _buildInputDecoration(String label) {
     return InputDecoration(
       labelText: label,
@@ -134,9 +115,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // ===============================
-  // UI
-  // ===============================
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
@@ -146,16 +124,41 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Top Image
-            Container(
-              height: 300,
-              width: screenWidth,
-              decoration: const BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage('assets/images/landingpage.png'),
-                  fit: BoxFit.cover,
+            // ---------------- TOP IMAGE WITH CURVE ----------------
+            Stack(
+              children: [
+                Container(
+                  height: 300,
+                  width: screenWidth,
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage('assets/images/landingpage.png'),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
                 ),
-              ),
+                Positioned.fill(
+                  child: Align(
+                    alignment: Alignment.bottomCenter,
+                    child: ClipPath(
+                      clipper: BottomCurveClipper(),
+                      child: Container(
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color: kBackgroundColor,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, -3),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
 
             Padding(
@@ -266,4 +269,36 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
+}
+
+// -------------------- CURVE CLIPPER --------------------
+class BottomCurveClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    Path path = Path();
+    path.lineTo(0, size.height * 0.4);
+
+    path.quadraticBezierTo(
+      size.width * 0.3,
+      size.height * 0.9,
+      size.width * 0.7,
+      size.height * 0.6,
+    );
+
+    path.quadraticBezierTo(
+      size.width * 0.9,
+      size.height * 0.4,
+      size.width,
+      size.height * 0.8,
+    );
+
+    path.lineTo(size.width, size.height);
+    path.lineTo(0, size.height);
+    path.close();
+
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }
