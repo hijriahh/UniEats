@@ -42,7 +42,7 @@ class _VendorsMenuPageState extends State<VendorsMenuPage> {
   }
 
   // =========================
-  // UPDATE PRICE
+  // EDIT PRICE
   // =========================
   void _editPrice(String menuKey, dynamic oldPrice) {
     final controller = TextEditingController(text: oldPrice.toString());
@@ -100,12 +100,19 @@ class _VendorsMenuPageState extends State<VendorsMenuPage> {
         title: const Text("My Menu"),
         backgroundColor: kPrimaryColor,
         elevation: 0,
+        automaticallyImplyLeading: false, // ❌ no back button
       ),
       body: menuItems.isEmpty
           ? const Center(child: Text("No menu items"))
-          : ListView.builder(
+          : GridView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: menuItems.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2, // ✅ two cards per row
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 0.75,
+              ),
               itemBuilder: (context, index) {
                 final key = menuItems.keys.elementAt(index);
                 final item = Map<String, dynamic>.from(menuItems[key]);
@@ -116,68 +123,118 @@ class _VendorsMenuPageState extends State<VendorsMenuPage> {
 
                 final available = item['available'] == true;
 
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.2),
-                        blurRadius: 6,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: ListTile(
-                    leading:
-                        item['menuimage'] != null &&
-                            item['menuimage'].toString().isNotEmpty
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Image.asset(
-                              item['menuimage'],
-                              width: 60,
-                              height: 60,
-                              fit: BoxFit.cover,
-                            ),
-                          )
-                        : null,
-                    title: Text(
-                      item['name'] ?? '',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text("RM ${price.toStringAsFixed(2)}"),
-                        const SizedBox(height: 4),
-                        Text(
-                          "Orders: ${item['orderCount'] ?? 0}",
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
-                          ),
+                return GestureDetector(
+                  onTap: () => _editPrice(key, price), // ✅ tap card to edit
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
                         ),
                       ],
                     ),
-                    trailing: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Switch(
-                          value: available,
-                          activeColor: kPrimaryColor,
-                          onChanged: (_) => _toggleAvailability(key, available),
+                        // IMAGE
+                        ClipRRect(
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(20),
+                          ),
+                          child:
+                              item['menuimage'] != null &&
+                                  item['menuimage'].toString().isNotEmpty
+                              ? Image.asset(
+                                  item['menuimage'],
+                                  height: 110,
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                )
+                              : Container(
+                                  height: 110,
+                                  color: Colors.grey.shade200,
+                                  child: const Icon(
+                                    Icons.fastfood,
+                                    size: 40,
+                                    color: Colors.grey,
+                                  ),
+                                ),
                         ),
-                        GestureDetector(
-                          onTap: () => _editPrice(key, price),
-                          child: const Text(
-                            "Edit",
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: kPrimaryColor,
-                              fontWeight: FontWeight.bold,
-                            ),
+
+                        Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                item['name'] ?? '',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                "RM ${price.toStringAsFixed(2)}",
+                                style: const TextStyle(
+                                  color: kPrimaryColor,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                "Orders: ${item['orderCount'] ?? 0}",
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+
+                              // AVAILABILITY ROW
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: available
+                                          ? Colors.green.shade100
+                                          : Colors.red.shade100,
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      available ? "Available" : "Unavailable",
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: available
+                                            ? Colors.green.shade700
+                                            : Colors.red.shade700,
+                                      ),
+                                    ),
+                                  ),
+                                  Switch(
+                                    value: available,
+                                    activeColor: kPrimaryColor,
+                                    materialTapTargetSize: MaterialTapTargetSize
+                                        .shrinkWrap, // ✅ no overflow
+                                    onChanged: (_) =>
+                                        _toggleAvailability(key, available),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -187,7 +244,7 @@ class _VendorsMenuPageState extends State<VendorsMenuPage> {
               },
             ),
       bottomNavigationBar: VendorNavigationBar(
-        currentIndex: 2, // Menu tab
+        currentIndex: 2,
         vendorId: widget.vendorId,
       ),
     );
