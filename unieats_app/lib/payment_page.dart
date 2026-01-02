@@ -195,6 +195,8 @@ class _PaymentPageState extends State<PaymentPage> {
 
                         await _createOrder();
 
+                        CartModel.clear();
+
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(

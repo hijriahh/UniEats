@@ -113,10 +113,10 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
             children: [
               Expanded(
                 child: Text(
-                  "${order.vendorName}\nOrder #${order.id.substring(0, 6)}",
+                  "${order.vendorName}\nOrder ID${order.id.substring(0, 10)}",
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                    fontSize: 15,
                   ),
                 ),
               ),
