@@ -131,7 +131,8 @@ class OrderSuccessPage extends StatelessWidget {
         elevation: 0,
         title: const Text(
           'Order Successful',
-          style: TextStyle(color: Colors.brown, fontWeight: FontWeight.bold),
+          style: TextStyle(color: Colors.brown, fontWeight: FontWeight.bold, fontSize: 20),
+          textAlign: TextAlign.center,
         ),
         iconTheme: const IconThemeData(color: Colors.brown),
       ),
