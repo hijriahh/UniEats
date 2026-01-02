@@ -8,18 +8,20 @@ const Color kBackgroundColor = Color(0xFFF6F6F6);
 class Order {
   final String id;
   final String userId;
-  final String vendorName; // Added
+  final String vendorName;
   final String status;
   final double total;
   final List<Map<String, dynamic>> items;
+  final int createdAt; // Timestamp
 
   Order({
     required this.id,
     required this.userId,
-    required this.vendorName, // Added
+    required this.vendorName,
     required this.status,
     required this.total,
     required this.items,
+    required this.createdAt,
   });
 
   factory Order.fromSnapshot(Map<String, dynamic> data, String id) {
@@ -32,10 +34,11 @@ class Order {
     return Order(
       id: id,
       userId: data['customerId'],
-      vendorName: data['vendorName'] ?? "Unknown Vendor", // Added
+      vendorName: data['vendorName'] ?? "Unknown Vendor",
       status: data['status'] ?? "Pending",
       total: (data['totalAmount'] as num).toDouble(),
       items: items,
+      createdAt: (data['createdAt'] ?? 0) as int,
     );
   }
 }
@@ -75,16 +78,19 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
       return;
     }
 
-    final data = Map<String, dynamic>.from(snapshot.value as Map);
+    final Map<String, dynamic> data =
+        Map<String, dynamic>.from(snapshot.value as Map);
+
     final fetchedOrders = data.entries.map((entry) {
-      return Order.fromSnapshot(
-        Map<String, dynamic>.from(entry.value),
-        entry.key,
-      );
+      final orderData = Map<String, dynamic>.from(entry.value);
+      return Order.fromSnapshot(orderData, entry.key);
     }).toList();
 
+    // Sort by createdAt descending (latest first)
+    fetchedOrders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
     setState(() {
-      orders = fetchedOrders.reversed.toList(); // newest first
+      orders = fetchedOrders;
       isLoading = false;
     });
   }
@@ -113,10 +119,10 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
             children: [
               Expanded(
                 child: Text(
-                  "${order.vendorName}\nOrder #${order.id.substring(0, 6)}",
+                  "${order.vendorName}\nOrder ID: ${order.id.substring(0, 10)}",
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                    fontSize: 15,
                   ),
                 ),
               ),
@@ -164,6 +170,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
             ),
 
           const Divider(height: 20, thickness: 1),
+
           // Total
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,

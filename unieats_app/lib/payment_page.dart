@@ -112,7 +112,8 @@ class _PaymentPageState extends State<PaymentPage> {
         elevation: 0,
         title: const Text(
           'Payment',
-          style: TextStyle(color: Colors.brown, fontWeight: FontWeight.bold),
+          style: TextStyle(color: Colors.brown, fontWeight: FontWeight.bold, fontSize: 20),
+          textAlign: TextAlign.center,
         ),
         iconTheme: const IconThemeData(color: Colors.brown),
       ),
@@ -194,6 +195,8 @@ class _PaymentPageState extends State<PaymentPage> {
                         final cartItems = List<CartItem>.from(CartModel.items);
 
                         await _createOrder();
+
+                        CartModel.clear();
 
                         Navigator.pushReplacement(
                           context,

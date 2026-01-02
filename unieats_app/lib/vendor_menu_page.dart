@@ -54,6 +54,7 @@ class _VendorMenuPageState extends State<VendorMenuPage> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return Dialog(
+              backgroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
@@ -64,14 +65,18 @@ class _VendorMenuPageState extends State<VendorMenuPage> {
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(16),
-                      child: _menuImage(item['menuimage']),
+                      child: SizedBox(
+                        width: 180,  // increase width
+                        height: 180, // increase height
+                        child: _menuImage(item['menuimage']),
+                      ),
                     ),
                     const SizedBox(height: 12),
 
                     Text(
                       item['name'] ?? '',
                       style: const TextStyle(
-                        fontSize: 20,
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                       textAlign: TextAlign.center,
@@ -82,12 +87,12 @@ class _VendorMenuPageState extends State<VendorMenuPage> {
                     Text(
                       "RM ${price.toStringAsFixed(2)}",
                       style: const TextStyle(
-                        fontSize: 18,
+                        fontSize: 17,
                         color: kPrimaryColor,
                       ),
                     ),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
 
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -116,7 +121,7 @@ class _VendorMenuPageState extends State<VendorMenuPage> {
                       ],
                     ),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
 
                     SizedBox(
                       width: double.infinity,
