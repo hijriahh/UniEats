@@ -3,11 +3,12 @@ import 'package:firebase_database/firebase_database.dart';
 import 'auth_service.dart';
 import 'customer_homepage.dart';
 import 'vendor_homepage.dart';
+import 'admin_homepage.dart';
 import 'signup_page.dart';
 import 'forgot_password_page.dart';
 
 const Color kPrimaryColor = Color(0xFFA07F60);
-const Color kBackgroundColor = Color.fromARGB(255, 255, 255, 255);
+const Color kBackgroundColor = Colors.white;
 const Color kTextColor = Color(0xFF333333);
 
 class LoginScreen extends StatefulWidget {
@@ -30,36 +31,19 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  Future<Map<String, dynamic>?> _getVendorByUid(String uid) async {
-    final snapshot = await FirebaseDatabase.instance.ref('vendors').get();
-    if (!snapshot.exists) return null;
-
-    final vendors = Map<String, dynamic>.from(snapshot.value as Map);
-    for (final entry in vendors.entries) {
-      final vendorData = Map<String, dynamic>.from(entry.value);
-      if (vendorData['uid'] == uid) {
-        return {'vendorId': entry.key, 'vendorData': vendorData};
-      }
-    }
-    return null;
-  }
-
   void _showAlert(String message) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         content: Text(message),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
-          ),
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('OK')),
         ],
       ),
     );
   }
 
-  void _loginUser() async {
+  Future<void> _loginUser() async {
     String email = _emailController.text.trim();
     String password = _passwordController.text.trim();
 
@@ -69,25 +53,50 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     setState(() => _isLoading = true);
+
     String res = await _authService.loginUser(email, password);
     setState(() => _isLoading = false);
 
     if (res == 'success') {
       final uid = _authService.getCurrentUser()!.uid;
-      final vendorResult = await _getVendorByUid(uid);
 
-      if (vendorResult != null) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => VendorHomepage(vendorId: vendorResult['vendorId']),
-          ),
-        );
-      } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const CustomerHomepage()),
-        );
+      // Roles to check in order: admins -> vendors -> users
+      final roles = ['admins', 'vendors', 'users'];
+      bool found = false;
+
+      for (var role in roles) {
+        final snapshot = await FirebaseDatabase.instance.ref('$role/$uid').get();
+        if (snapshot.exists) {
+          final data = Map<String, dynamic>.from(snapshot.value as Map);
+
+          if (role == 'admins') {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const AdminHomepage()),
+            );
+          } else if (role == 'vendors') {
+            if (data['approved'] == true) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => VendorHomepage(vendorId: uid)),
+              );
+            } else {
+              _showAlert('Your vendor account is pending admin approval.');
+            }
+          } else if (role == 'users') {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const CustomerHomepage()),
+            );
+          }
+
+          found = true;
+          break;
+        }
+      }
+
+      if (!found) {
+        _showAlert('No account found. Please register first.');
       }
     } else {
       _showAlert(res);
@@ -99,18 +108,15 @@ class _LoginScreenState extends State<LoginScreen> {
       labelText: label,
       labelStyle: const TextStyle(color: Colors.grey),
       filled: true,
-      fillColor: Colors.white,
+      fillColor: Colors.grey[100],
+      contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: const BorderSide(color: Colors.brown, width: 2),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: const BorderSide(color: Colors.brown, width: 2),
+        borderRadius: BorderRadius.circular(15),
+        borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: const BorderSide(color: kPrimaryColor, width: 3),
+        borderRadius: BorderRadius.circular(15),
+        borderSide: const BorderSide(color: kPrimaryColor, width: 2),
       ),
     );
   }
@@ -128,7 +134,7 @@ class _LoginScreenState extends State<LoginScreen> {
             Stack(
               children: [
                 Container(
-                  height: 300,
+                  height: 380,
                   width: screenWidth,
                   decoration: const BoxDecoration(
                     image: DecorationImage(
@@ -137,13 +143,21 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
+                Positioned(
+                  top: 40,
+                  left: 10,
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ),
                 Positioned.fill(
                   child: Align(
                     alignment: Alignment.bottomCenter,
                     child: ClipPath(
                       clipper: BottomCurveClipper(),
                       child: Container(
-                        height: 100,
+                        height: 80,
                         decoration: BoxDecoration(
                           color: kBackgroundColor,
                           boxShadow: [
@@ -162,54 +176,30 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
 
             Padding(
-              padding: const EdgeInsets.all(30),
+              padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
                     'Sign In',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: kTextColor,
-                    ),
+                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: kTextColor),
                   ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 15),
 
                   // Email
-                  TextField(
-                    controller: _emailController,
-                    decoration: _buildInputDecoration('Email'),
-                  ),
-                  const SizedBox(height: 20),
+                  TextField(controller: _emailController, decoration: _buildInputDecoration('Email')),
+                  const SizedBox(height: 15),
 
                   // Password
-                  TextField(
-                    controller: _passwordController,
-                    obscureText: true,
-                    decoration: _buildInputDecoration('Password'),
-                  ),
+                  TextField(controller: _passwordController, obscureText: true, decoration: _buildInputDecoration('Password')),
                   const SizedBox(height: 10),
 
                   // Forgot Password
                   Align(
                     alignment: Alignment.centerRight,
                     child: GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const ForgotPasswordScreen(),
-                          ),
-                        );
-                      },
-                      child: const Text(
-                        'Forgot Password?',
-                        style: TextStyle(
-                          color: kPrimaryColor,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ForgotPasswordScreen())),
+                      child: const Text('Forgot Password?', style: TextStyle(color: kPrimaryColor, fontWeight: FontWeight.bold)),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -222,22 +212,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: kPrimaryColor,
-                              padding: const EdgeInsets.symmetric(vertical: 20),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 15),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                             ),
                             onPressed: _loginUser,
-                            child: const Text(
-                              'Login',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.white,
-                              ),
-                            ),
+                            child: const Text('Login', style: TextStyle(fontSize: 16, color: Colors.white)),
                           ),
                         ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 15),
 
                   // Sign Up
                   Row(
@@ -245,22 +227,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       const Text("Don't have an account? "),
                       GestureDetector(
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const RegisterScreen(),
-                          ),
-                        ),
-                        child: const Text(
-                          "Sign Up",
-                          style: TextStyle(
-                            color: kPrimaryColor,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterScreen())),
+                        child: const Text("Sign Up", style: TextStyle(color: kPrimaryColor, fontWeight: FontWeight.bold)),
                       ),
                     ],
                   ),
+                  const SizedBox(height: 10),
                 ],
               ),
             ),
@@ -277,25 +249,11 @@ class BottomCurveClipper extends CustomClipper<Path> {
   Path getClip(Size size) {
     Path path = Path();
     path.lineTo(0, size.height * 0.4);
-
-    path.quadraticBezierTo(
-      size.width * 0.3,
-      size.height * 0.9,
-      size.width * 0.7,
-      size.height * 0.6,
-    );
-
-    path.quadraticBezierTo(
-      size.width * 0.9,
-      size.height * 0.4,
-      size.width,
-      size.height * 0.8,
-    );
-
+    path.quadraticBezierTo(size.width * 0.3, size.height * 0.9, size.width * 0.7, size.height * 0.6);
+    path.quadraticBezierTo(size.width * 0.9, size.height * 0.4, size.width, size.height * 0.8);
     path.lineTo(size.width, size.height);
     path.lineTo(0, size.height);
     path.close();
-
     return path;
   }
 
