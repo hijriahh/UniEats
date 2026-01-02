@@ -176,35 +176,50 @@ class _VendorMenuPageState extends State<VendorMenuPage> {
         children: [
           // VENDOR BANNER
           Stack(
-            children: [
-              Container(
-                height: 220,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  image:
-                      widget.vendorData['image'] != null &&
-                          widget.vendorData['image'].isNotEmpty
-                      ? DecorationImage(
-                          image: AssetImage(widget.vendorData['image']),
-                          fit: BoxFit.cover,
-                        )
-                      : null,
+          children: [
+            Container(
+              height: 220,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                image:
+                    widget.vendorData['image'] != null &&
+                            widget.vendorData['image'].isNotEmpty
+                        ? DecorationImage(
+                            image: AssetImage(widget.vendorData['image']),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
+              ),
+            ),
+
+            // 🔙 BACK BUTTON
+            Positioned(
+              top: 40,
+              left: 12,
+              child: CircleAvatar(
+                backgroundColor: Colors.black.withOpacity(0.4),
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  onPressed: () => Navigator.pop(context),
                 ),
               ),
-              Positioned(
-                bottom: 16,
-                left: 16,
-                child: Text(
-                  widget.vendorData['name'] ?? '',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                  ),
+            ),
+
+            Positioned(
+              bottom: 16,
+              left: 16,
+              child: Text(
+                widget.vendorData['name'] ?? '',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
+        ),
+
 
           // MENU LIST (CARD UI)
           Expanded(
