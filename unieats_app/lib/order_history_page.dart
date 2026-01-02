@@ -8,6 +8,7 @@ const Color kBackgroundColor = Color(0xFFF6F6F6);
 class Order {
   final String id;
   final String userId;
+  final String vendorName; // Added
   final String status;
   final double total;
   final List<Map<String, dynamic>> items;
@@ -15,6 +16,7 @@ class Order {
   Order({
     required this.id,
     required this.userId,
+    required this.vendorName, // Added
     required this.status,
     required this.total,
     required this.items,
@@ -30,6 +32,7 @@ class Order {
     return Order(
       id: id,
       userId: data['customerId'],
+      vendorName: data['vendorName'] ?? "Unknown Vendor", // Added
       status: data['status'] ?? "Pending",
       total: (data['totalAmount'] as num).toDouble(),
       items: items,
@@ -104,22 +107,21 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
+          // Header: Vendor + Order ID + Status
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                "Order #${order.id.substring(0, 6)}",
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
+              Expanded(
+                child: Text(
+                  "${order.vendorName}\nOrder #${order.id.substring(0, 6)}",
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: order.status == "Accepted"
                       ? Colors.green[100]
@@ -140,8 +142,8 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
           ),
           const SizedBox(height: 8),
 
-          // Items
-          ...order.items.map(
+          // Items (first 2 items preview)
+          ...order.items.take(2).map(
             (item) => Padding(
               padding: const EdgeInsets.symmetric(vertical: 2),
               child: Row(
@@ -149,12 +151,17 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                 children: [
                   Text("${item['quantity']}x ${item['name']}"),
                   Text(
-                    "\$${(item['price'] * item['quantity']).toStringAsFixed(2)}",
+                    "RM ${(item['price'] * item['quantity']).toStringAsFixed(2)}",
                   ),
                 ],
               ),
             ),
           ),
+          if (order.items.length > 2)
+            Text(
+              "+ ${order.items.length - 2} more items",
+              style: const TextStyle(color: Colors.grey, fontSize: 12),
+            ),
 
           const Divider(height: 20, thickness: 1),
           // Total
@@ -166,7 +173,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               Text(
-                "\$${order.total.toStringAsFixed(2)}",
+                "RM ${order.total.toStringAsFixed(2)}",
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ],
@@ -183,6 +190,11 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
       appBar: AppBar(
         title: const Text("Order History"),
         backgroundColor: Colors.white,
+        titleTextStyle: const TextStyle(
+          color: Colors.brown,
+          fontWeight: FontWeight.bold,
+          fontSize: 20,
+        ),
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
@@ -193,14 +205,14 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : orders.isEmpty
-          ? const Center(child: Text("No orders found"))
-          : ListView.builder(
-              padding: const EdgeInsets.only(top: 16, bottom: 16),
-              itemCount: orders.length,
-              itemBuilder: (context, index) {
-                return _buildOrderCard(orders[index]);
-              },
-            ),
+              ? const Center(child: Text("No orders found"))
+              : ListView.builder(
+                  padding: const EdgeInsets.only(top: 16, bottom: 16),
+                  itemCount: orders.length,
+                  itemBuilder: (context, index) {
+                    return _buildOrderCard(orders[index]);
+                  },
+                ),
     );
   }
 }

@@ -1,42 +1,34 @@
 import 'package:flutter/material.dart';
 import 'customer_navigation_bar.dart';
 import 'models/cart_model.dart';
-import 'track_order_page.dart'; // import your track order page
+import 'order_history_page.dart';
 
 const Color kPrimaryColor = Color(0xFFB7916E);
 const Color kBackgroundColor = Color(0xFFF6F6F6);
 
 class OrderSuccessPage extends StatelessWidget {
   final double total;
-  final String paymentMethod;
+  final List<CartItem> cartItems;
 
   const OrderSuccessPage({
     Key? key,
     required this.total,
-    required this.paymentMethod,
+    required this.cartItems,
   }) : super(key: key);
 
-  void _goToTrackOrder(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const TrackOrderPage()),
-    );
-  }
-
+  /// Builds the order summary card
   Widget _buildOrderSummary() {
-    final cartItems = CartModel.items;
-
     return Container(
       padding: const EdgeInsets.all(20),
-      margin: const EdgeInsets.symmetric(vertical: 24),
+      margin: const EdgeInsets.only(top: 24),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 15,
-            offset: const Offset(0, 6),
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
@@ -47,43 +39,67 @@ class OrderSuccessPage extends StatelessWidget {
             'Order Summary',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 12),
-          ...cartItems.map(
-            (item) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Row(
-                children: [
-                  Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(Icons.fastfood, color: Colors.grey),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      '${item.name} x${item.quantity}',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
+          const SizedBox(height: 16),
+
+          /// List of items
+          ...cartItems.map((item) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  children: [
+                    // Item Image
+                    if (item.menuimage != null && item.menuimage!.isNotEmpty)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.asset(
+                          item.menuimage!,
+                          width: 50,
+                          height: 50,
+                          fit: BoxFit.cover,
+                        ),
+                      )
+                    else
+                      Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: kPrimaryColor.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          item.name[0],
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    const SizedBox(width: 12),
+
+                    /// Item name and quantity
+                    Expanded(
+                      child: Text(
+                        '${item.name} x${item.quantity}',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
-                  ),
-                  Text(
-                    'RM ${(item.price * item.quantity).toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+
+                    /// Item price
+                    Text(
+                      'RM ${(item.price * item.quantity).toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const Divider(height: 24, thickness: 1),
+                  ],
+                ),
+              )),
+
+          const Divider(height: 30),
+
+          /// Total
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -96,6 +112,7 @@ class OrderSuccessPage extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
+                  color: kPrimaryColor,
                 ),
               ),
             ],
@@ -123,41 +140,60 @@ class OrderSuccessPage extends StatelessWidget {
         child: Column(
           children: [
             const SizedBox(height: 20),
-            Container(
-              padding: const EdgeInsets.all(16),
-              child: const Icon(
-                Icons.check_circle_rounded,
-                size: 100,
-                color: kPrimaryColor,
-              ),
+
+            /// Success Icon
+            const Icon(
+              Icons.check_circle_rounded,
+              size: 100,
+              color: kPrimaryColor,
             ),
+
             const SizedBox(height: 20),
+
+            /// Success message
             const Text(
-              'Your order has been\nplaced successfully!',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              'Your order has been placed!',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Payment: $paymentMethod\nTotal: RM ${total.toStringAsFixed(2)}',
-              style: const TextStyle(fontSize: 16, color: Colors.grey),
+
+            const SizedBox(height: 6),
+
+            const Text(
+              'Please wait while the vendor prepares your order.',
+              style: TextStyle(color: Colors.grey),
               textAlign: TextAlign.center,
             ),
+
+            /// Order summary
             _buildOrderSummary(),
+
+            const SizedBox(height: 30),
+
+            /// Track Order Button
             SizedBox(
               width: double.infinity,
               height: 55,
               child: ElevatedButton(
-                onPressed: () => _goToTrackOrder(context),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const OrderHistoryPage(),
+                    ),
+                  );
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimaryColor,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  elevation: 5,
                 ),
                 child: const Text(
-                  'Track Order',
+                  'View My Order',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -166,6 +202,7 @@ class OrderSuccessPage extends StatelessWidget {
                 ),
               ),
             ),
+
             const SizedBox(height: 20),
           ],
         ),
