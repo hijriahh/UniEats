@@ -132,6 +132,7 @@ class _VendorMenuPageState extends State<VendorMenuPage> {
                           for (int i = 0; i < quantity; i++) {
                             CartModel.addItem(
                               widget.vendorKey,
+                              widget.vendorData['name'],
                               item['name'],
                               price,
                               image: item['menuimage'],

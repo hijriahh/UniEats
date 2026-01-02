@@ -26,6 +26,7 @@ class _PaymentPageState extends State<PaymentPage> {
     if (cartItems.isEmpty) return;
 
     final vendorKey = cartItems.first.vendorKey;
+    final vendorName = cartItems.first.vendorName;
 
     double total = 0;
     final items = cartItems.map((item) {
@@ -39,9 +40,10 @@ class _PaymentPageState extends State<PaymentPage> {
 
     await FirebaseDatabase.instance.ref('orders').push().set({
       'vendorId': vendorKey,
+      'vendorName': vendorName, 
       'customerId': user.uid,
       'paymentMethod': selectedMethod,
-      'status': 'Pending', // Vendor will Accept / Reject
+      'status': 'Pending',
       'totalAmount': total,
       'items': items,
       'createdAt': ServerValue.timestamp,
@@ -119,7 +121,7 @@ class _PaymentPageState extends State<PaymentPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Total Amount Card
+            /// Total Amount
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -167,17 +169,18 @@ class _PaymentPageState extends State<PaymentPage> {
               method: 'Online Banking',
               icon: Icons.account_balance,
             ),
-
             _paymentOption(
               method: 'Credit / Debit Card',
               icon: Icons.credit_card,
             ),
-
-            _paymentOption(method: 'Pay at Counter', icon: Icons.money),
+            _paymentOption(
+              method: 'Pay at Counter',
+              icon: Icons.money,
+            ),
 
             const Spacer(),
 
-            // Confirm Button
+            /// Confirm Button
             SizedBox(
               width: double.infinity,
               height: 55,
@@ -185,22 +188,23 @@ class _PaymentPageState extends State<PaymentPage> {
                 onPressed: selectedMethod.isEmpty
                     ? null
                     : () async {
-                        final double paidTotal = CartModel.totalPrice;
+                        final paidTotal = CartModel.totalPrice;
+
+                        // Copy cart items BEFORE clearing
+                        final cartItems = List<CartItem>.from(CartModel.items);
 
                         await _createOrder();
-                        CartModel.clear();
 
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
                             builder: (_) => OrderSuccessPage(
                               total: paidTotal,
-                              paymentMethod: selectedMethod,
+                              cartItems: cartItems,
                             ),
                           ),
                         );
                       },
-
                 style: ElevatedButton.styleFrom(
                   backgroundColor: kPrimaryColor,
                   shape: RoundedRectangleBorder(

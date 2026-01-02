@@ -98,7 +98,7 @@ class _CartPageState extends State<CartPage> {
                                     ),
                                   ),
                                   Text(
-                                    "Vendor",
+                                    item.vendorName,
                                     style: const TextStyle(color: Colors.grey),
                                   ),
                                   const SizedBox(height: 4),
@@ -136,6 +136,7 @@ class _CartPageState extends State<CartPage> {
                                   onPressed: () => setState(
                                     () => CartModel.addItem(
                                       item.vendorKey,
+                                      item.vendorName,
                                       item.name,
                                       item.price,
                                       image: item.menuimage,

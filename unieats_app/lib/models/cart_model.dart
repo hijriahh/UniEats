@@ -1,5 +1,6 @@
 class CartItem {
   final String vendorKey;
+  final String vendorName;
   final String name;
   final double price;
   int quantity;
@@ -7,6 +8,7 @@ class CartItem {
 
   CartItem({
     required this.vendorKey,
+    required this.vendorName,
     required this.name,
     required this.price,
     this.quantity = 1,
@@ -23,6 +25,7 @@ class CartModel {
   // Add item to cart
   static void addItem(
     String vendorKey,
+    String vendorName,
     String name,
     double price, {
     String? image,
@@ -36,6 +39,7 @@ class CartModel {
       _items.add(
         CartItem(
           vendorKey: vendorKey,
+          vendorName: vendorName,
           name: name,
           price: price,
           menuimage: image,
