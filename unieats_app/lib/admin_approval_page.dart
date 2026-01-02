@@ -32,7 +32,9 @@ class _AdminVendorApprovalPageState extends State<AdminVendorApprovalPage> {
       final List<Map<String, dynamic>> loaded = [];
 
       data.forEach((vendorId, vendorData) {
-        if (vendorData is Map && vendorData['approved'] == false) {
+        if (vendorData is Map &&
+            (vendorData['approved'] == false ||
+                vendorData['approved'] == null)) {
           loaded.add({
             'vendorId': vendorId,
             'name': vendorData['name'] ?? 'Unnamed Vendor',
