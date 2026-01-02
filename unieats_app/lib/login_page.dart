@@ -3,6 +3,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'auth_service.dart';
 import 'customer_homepage.dart';
 import 'vendor_homepage.dart';
+//import 'admin_dashboard.dart';
 import 'signup_page.dart';
 import 'forgot_password_page.dart';
 
@@ -30,17 +31,6 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  Future<Map<String, dynamic>?> _getVendorByUid(String uid) async {
-    final snapshot = await FirebaseDatabase.instance.ref('vendors').get();
-    if (!snapshot.exists) return null;
-    final vendors = Map<String, dynamic>.from(snapshot.value as Map);
-    for (final entry in vendors.entries) {
-      final vendorData = Map<String, dynamic>.from(entry.value);
-      if (vendorData['uid'] == uid) return {'vendorId': entry.key, 'vendorData': vendorData};
-    }
-    return null;
-  }
-
   void _showAlert(String message) {
     showDialog(
       context: context,
@@ -53,7 +43,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void _loginUser() async {
+  Future<void> _loginUser() async {
     String email = _emailController.text.trim();
     String password = _passwordController.text.trim();
 
@@ -63,19 +53,50 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     setState(() => _isLoading = true);
+
     String res = await _authService.loginUser(email, password);
     setState(() => _isLoading = false);
 
     if (res == 'success') {
       final uid = _authService.getCurrentUser()!.uid;
-      final vendorResult = await _getVendorByUid(uid);
-      if (vendorResult != null) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => VendorHomepage(vendorId: vendorResult['vendorId'])),
-        );
-      } else {
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const CustomerHomepage()));
+
+      // Roles to check in order: admins -> vendors -> users
+      final roles = ['admins', 'vendors', 'users'];
+      bool found = false;
+
+      for (var role in roles) {
+        final snapshot = await FirebaseDatabase.instance.ref('$role/$uid').get();
+        if (snapshot.exists) {
+          final data = Map<String, dynamic>.from(snapshot.value as Map);
+
+          if (role == 'admins') {
+            //Navigator.pushReplacement(
+              //context,
+              //MaterialPageRoute(builder: (_) => const AdminDashboard()),
+            //);
+          } else if (role == 'vendors') {
+            if (data['approved'] == true) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => VendorHomepage(vendorId: uid)),
+              );
+            } else {
+              _showAlert('Your vendor account is pending admin approval.');
+            }
+          } else if (role == 'users') {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const CustomerHomepage()),
+            );
+          }
+
+          found = true;
+          break;
+        }
+      }
+
+      if (!found) {
+        _showAlert('No account found. Please register first.');
       }
     } else {
       _showAlert(res);
@@ -139,7 +160,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         height: 80,
                         decoration: BoxDecoration(
                           color: kBackgroundColor,
-                          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -3))],
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, -3),
+                            ),
+                          ],
                         ),
                       ),
                     ),
