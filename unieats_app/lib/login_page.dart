@@ -3,7 +3,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'auth_service.dart';
 import 'customer_homepage.dart';
 import 'vendor_homepage.dart';
-//import 'admin_dashboard.dart';
+import 'admin_homepage.dart';
 import 'signup_page.dart';
 import 'forgot_password_page.dart';
 
@@ -70,10 +70,10 @@ class _LoginScreenState extends State<LoginScreen> {
           final data = Map<String, dynamic>.from(snapshot.value as Map);
 
           if (role == 'admins') {
-            //Navigator.pushReplacement(
-              //context,
-              //MaterialPageRoute(builder: (_) => const AdminDashboard()),
-            //);
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const AdminHomepage()),
+            );
           } else if (role == 'vendors') {
             if (data['approved'] == true) {
               Navigator.pushReplacement(
