@@ -53,9 +53,9 @@ class _AdminAllUsersPageState extends State<AdminAllUsersPage> {
         elevation: 0,
         title: const Text(
           "All Users",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: TextStyle(color: Color.fromARGB(255, 0, 0, 0), fontWeight: FontWeight.bold),
         ),
-        iconTheme: const IconThemeData(color: Colors.white),
+        iconTheme: const IconThemeData(color: Color.fromARGB(255, 0, 0, 0)),
       ),
       body: users.isEmpty
           ? const Center(child: Text("No users found"))
