@@ -99,6 +99,7 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
                         "UNIMAS Campus",
                         style: TextStyle(
                           color: Color.fromARGB(176, 96, 48, 12),
+                          
                         ),
                       ),
                     ],
@@ -110,7 +111,7 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
 
             // Search bar
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -251,10 +252,12 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
   // Vendor card with modern style
   Widget vendorCard(Map<String, dynamic> vendor) {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
+        
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.2),
@@ -266,7 +269,7 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
       child: ListTile(
         leading: CircleAvatar(
           radius: 28,
-          backgroundColor: kSecondaryColor,
+          backgroundColor: const Color.fromARGB(255, 188, 188, 188),
           backgroundImage:
               vendor['image'] != null && vendor['image'].toString().isNotEmpty
               ? AssetImage(vendor['image'])
@@ -285,6 +288,50 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
         subtitle: Text("${vendor['category']} • ⭐ ${vendor['rating'] ?? ''}"),
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
         onTap: () {
+        final menuItems = extractMenu(vendor['menu']);
+        if (menuItems.isEmpty) {
+          // Show modern popup
+          showDialog(
+            context: context,
+            builder: (context) => Dialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.warning_amber_rounded, size: 48, color: Colors.red),
+                    const SizedBox(height: 10),
+                    const Text(
+                      "Menu Not Available",
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      "This vendor has no menu available at the moment. Please check back later.",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: kPrimaryColor,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      ),
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text("OK", style: TextStyle(color: Colors.white)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        } else {
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -294,7 +341,9 @@ class _CustomerHomepageState extends State<CustomerHomepage> {
               ),
             ),
           );
-        },
+        }
+      },
+
       ),
     );
   }
