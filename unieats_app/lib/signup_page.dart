@@ -186,7 +186,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           value: 'user',
                           groupValue: _role,
                           onChanged: (val) => setState(() => _role = val!),
-                          title: const Text('User'),
+                          title: const Text('Customer'),
                         ),
                       ),
                       Expanded(

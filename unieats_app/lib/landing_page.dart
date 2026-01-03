@@ -62,7 +62,7 @@ class LandingScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 14),
                   const Text(
-                    'Experience easy access and secure services with our application.',
+                    'Experience fast, reliable, and secure food ordering designed just for you',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 16,
