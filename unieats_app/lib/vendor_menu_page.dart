@@ -66,8 +66,8 @@ class _VendorMenuPageState extends State<VendorMenuPage> {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(16),
                       child: SizedBox(
-                        width: 180,  // increase width
-                        height: 180, // increase height
+                        width: 200,  // increase width
+                        height: 130, // increase height
                         child: _menuImage(item['menuimage']),
                       ),
                     ),
