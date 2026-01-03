@@ -96,7 +96,7 @@ class _SearchPageState extends State<SearchPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         title: const Text(
-          "Search Food",
+          "Search",
           style: TextStyle(color: Colors.brown, fontWeight: FontWeight.bold, fontSize: 21),
         ),
         centerTitle: true,

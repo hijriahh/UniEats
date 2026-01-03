@@ -167,7 +167,7 @@ class _PaymentPageState extends State<PaymentPage> {
             const SizedBox(height: 16),
 
             _paymentOption(
-              method: 'Online Banking',
+              method: 'Online Banking / FPX',
               icon: Icons.account_balance,
             ),
             _paymentOption(
@@ -175,7 +175,11 @@ class _PaymentPageState extends State<PaymentPage> {
               icon: Icons.credit_card,
             ),
             _paymentOption(
-              method: 'Pay at Counter',
+              method: 'E-Wallet',
+              icon: Icons.wallet,
+            ),
+            _paymentOption(
+              method: 'Cash',
               icon: Icons.money,
             ),
 
