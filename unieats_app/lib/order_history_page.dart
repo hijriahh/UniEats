@@ -200,7 +200,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
         titleTextStyle: const TextStyle(
           color: Colors.brown,
           fontWeight: FontWeight.bold,
-          fontSize: 20,
+          fontSize: 21,
         ),
         elevation: 0,
         centerTitle: true,
