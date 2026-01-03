@@ -191,9 +191,14 @@ class _AiChatbotPageState extends State<AiChatbotPage> {
     return Scaffold(
       backgroundColor: kBackgroundColor,
       appBar: AppBar(
-        title: const Text("Ask Yuni"),
-        backgroundColor: kPrimaryColor,
-        elevation: 1,
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: const Text(
+          "Ask Yuni",
+          style: TextStyle(color: Colors.brown, fontWeight: FontWeight.bold, fontSize: 21),
+        ),
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.brown),
       ),
       body: Column(
         children: [

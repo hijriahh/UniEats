@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'receipt.dart';
 
 const Color kPrimaryColor = Color(0xFFB7916E);
 const Color kBackgroundColor = Color(0xFFF6F6F6);
@@ -13,6 +14,7 @@ class Order {
   final double total;
   final List<Map<String, dynamic>> items;
   final int createdAt; // Timestamp
+  final String paymentMethod;
 
   Order({
     required this.id,
@@ -22,14 +24,12 @@ class Order {
     required this.total,
     required this.items,
     required this.createdAt,
+    required this.paymentMethod, 
   });
 
   factory Order.fromSnapshot(Map<String, dynamic> data, String id) {
     final List rawItems = data['items'] as List? ?? [];
-
-    final items = rawItems
-        .map((e) => Map<String, dynamic>.from(e as Map))
-        .toList();
+    final items = rawItems.map((e) => Map<String, dynamic>.from(e as Map)).toList();
 
     return Order(
       id: id,
@@ -39,6 +39,7 @@ class Order {
       total: (data['totalAmount'] as num).toDouble(),
       items: items,
       createdAt: (data['createdAt'] ?? 0) as int,
+      paymentMethod: data['paymentMethod'] ?? "Unknown", //
     );
   }
 }
@@ -86,7 +87,6 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
       return Order.fromSnapshot(orderData, entry.key);
     }).toList();
 
-    // Sort by createdAt descending (latest first)
     fetchedOrders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
     setState(() {
@@ -96,96 +96,100 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
   }
 
   Widget _buildOrderCard(Order order) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => OrderDetailPage(order: order)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header: Vendor + Order ID + Status
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  "${order.vendorName}\nOrder ID: ${order.id.substring(0, 10)}",
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header: Vendor + Order ID + Status
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    "${order.vendorName}\nOrder ID: ${order.id.substring(0, 10)}",
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
                   ),
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: order.status == "Accepted"
-                      ? Colors.green[100]
-                      : Colors.orange[100],
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  order.status,
-                  style: TextStyle(
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
                     color: order.status == "Accepted"
-                        ? Colors.green[800]
-                        : Colors.orange[800],
-                    fontWeight: FontWeight.bold,
+                        ? Colors.green[100]
+                        : Colors.orange[100],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    order.status,
+                    style: TextStyle(
+                      color: order.status == "Accepted"
+                          ? Colors.green[800]
+                          : Colors.orange[800],
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
+              ],
+            ),
+            const SizedBox(height: 8),
 
-          // Items (first 2 items preview)
-          ...order.items.take(2).map(
-            (item) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text("${item['quantity']}x ${item['name']}"),
-                  Text(
-                    "RM ${(item['price'] * item['quantity']).toStringAsFixed(2)}",
-                  ),
-                ],
+            // Items (first 2 items preview)
+            ...order.items.take(2).map(
+              (item) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text("${item['quantity']}x ${item['name']}"),
+                    Text("RM ${(item['price'] * item['quantity']).toStringAsFixed(2)}"),
+                  ],
+                ),
               ),
             ),
-          ),
-          if (order.items.length > 2)
-            Text(
-              "+ ${order.items.length - 2} more items",
-              style: const TextStyle(color: Colors.grey, fontSize: 12),
-            ),
-
-          const Divider(height: 20, thickness: 1),
-
-          // Total
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                "Total",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
+            if (order.items.length > 2)
               Text(
-                "RM ${order.total.toStringAsFixed(2)}",
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                "+ ${order.items.length - 2} more items",
+                style: const TextStyle(color: Colors.grey, fontSize: 12),
               ),
-            ],
-          ),
-        ],
+
+            const Divider(height: 20, thickness: 1),
+
+            // Total
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  "Total",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  "RM ${order.total.toStringAsFixed(2)}",
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -200,7 +204,7 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
         titleTextStyle: const TextStyle(
           color: Colors.brown,
           fontWeight: FontWeight.bold,
-          fontSize: 20,
+          fontSize: 21,
         ),
         elevation: 0,
         centerTitle: true,
@@ -220,6 +224,213 @@ class _OrderHistoryPageState extends State<OrderHistoryPage> {
                     return _buildOrderCard(orders[index]);
                   },
                 ),
+    );
+  }
+}
+
+// ---------------- MODERN ORDER DETAIL PAGE ----------------
+class OrderDetailPage extends StatelessWidget {
+  final Order order;
+
+  const OrderDetailPage({Key? key, required this.order}) : super(key: key);
+
+  String _formatTimestamp(int ts) {
+    final date = DateTime.fromMillisecondsSinceEpoch(ts);
+    return "${date.day}/${date.month}/${date.year} ${date.hour.toString().padLeft(2,'0')}:${date.minute.toString().padLeft(2,'0')}";
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: kBackgroundColor,
+      appBar: AppBar(
+        title: const Text("Order Detail"),
+        backgroundColor: Colors.white,
+        titleTextStyle: const TextStyle(
+          color: Colors.brown,
+          fontWeight: FontWeight.bold,
+          fontSize: 21,
+        ),
+        elevation: 0,
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.brown),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: Column(
+        children: [
+          // Scrollable content
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Vendor + Order info
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          order.vendorName,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "Order ID: ${order.id.substring(0, 10)}",
+                          style: const TextStyle(color: Colors.grey),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Text(
+                              "Status: ",
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: order.status == "Accepted"
+                                    ? Colors.green[100]
+                                    : Colors.orange[100],
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                order.status,
+                                style: TextStyle(
+                                  color: order.status == "Accepted"
+                                      ? Colors.green[800]
+                                      : Colors.orange[800],
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "Date: ${_formatTimestamp(order.createdAt)}",
+                          style: const TextStyle(color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Items in one box
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Items",
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 8),
+                        ...order.items.map(
+                          (item) {
+                            final price = (item['price'] as num) * (item['quantity'] as num);
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    "${item['quantity']}x ${item['name']}",
+                                    style: const TextStyle(fontSize: 15),
+                                  ),
+                                  Text(
+                                    "RM ${price.toStringAsFixed(2)}",
+                                    style: const TextStyle(
+                                      color: kPrimaryColor,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                        const Divider(height: 20, thickness: 1),
+                        // Total
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              "Total",
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                            ),
+                            Text(
+                              "RM ${order.total.toStringAsFixed(2)}",
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 80), // Add space for button at bottom
+                ],
+              ),
+            ),
+          ),
+
+          // Download Receipt Button fixed at bottom
+          Container(
+            padding: const EdgeInsets.all(16),
+            color: Colors.white,
+            child: SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kPrimaryColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: () => generateReceipt(order),
+                child: const Text(
+                  "Download Receipt",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

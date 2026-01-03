@@ -111,10 +111,10 @@ class _PaymentPageState extends State<PaymentPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         title: const Text(
-          'Payment',
-          style: TextStyle(color: Colors.brown, fontWeight: FontWeight.bold, fontSize: 20),
-          textAlign: TextAlign.center,
+          "Payment",
+          style: TextStyle(color: Colors.brown, fontWeight: FontWeight.bold, fontSize: 21),
         ),
+        centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.brown),
       ),
       body: Padding(

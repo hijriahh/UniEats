@@ -27,7 +27,7 @@ class _CartPageState extends State<CartPage> {
         elevation: 0,
         title: const Text(
           "My Cart",
-          style: TextStyle(color: Colors.brown, fontWeight: FontWeight.bold),
+          style: TextStyle(color: Colors.brown, fontWeight: FontWeight.bold, fontSize: 21),
         ),
         centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.brown),
