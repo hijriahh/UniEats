@@ -7,12 +7,23 @@ import 'login_page.dart';
 const Color kAdminPrimary = Color(0xFFB7916E);
 const Color kBackgroundColor = Color(0xFFF6F6F6);
 
-class AdminHomepage extends StatelessWidget {
+class AdminHomepage extends StatefulWidget {
   const AdminHomepage({Key? key}) : super(key: key);
+
+  @override
+  State<AdminHomepage> createState() => _AdminHomepageState();
+}
+
+class _AdminHomepageState extends State<AdminHomepage> {
+  int _currentIndex = 0;
+
+  final List<Widget> _pages = const [
+    AdminDashboardPage(),
+    AdminVendorApprovalPage(),
+  ];
 
   void _logout(BuildContext context) async {
     await FirebaseAuth.instance.signOut();
-
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -22,40 +33,54 @@ class AdminHomepage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        backgroundColor: kBackgroundColor,
-        appBar: AppBar(
-          automaticallyImplyLeading: false, // ❌ remove back button
-          backgroundColor: kAdminPrimary,
-          elevation: 0,
-          title: const Text(
-            "Admin Panel",
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          centerTitle: true,
+    return Scaffold(
+      backgroundColor: kBackgroundColor,
 
-          // Logout button
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.logout),
-              tooltip: "Logout",
-              onPressed: () => _logout(context),
-            ),
-          ],
-
-          bottom: const TabBar(
-            indicatorColor: Colors.white,
-            tabs: [
-              Tab(icon: Icon(Icons.dashboard), text: "Dashboard"),
-              Tab(icon: Icon(Icons.store), text: "Vendors"),
-            ],
+      // ---------------- APP BAR ----------------
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: kAdminPrimary,
+        elevation: 0,
+        centerTitle: true,
+        title: const Text(
+          "Admin Panel",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: "Logout",
+            onPressed: () => _logout(context),
           ),
-        ),
-        body: const TabBarView(
-          children: [AdminDashboardPage(), AdminVendorApprovalPage()],
-        ),
+        ],
+      ),
+
+      // ---------------- BODY ----------------
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _pages,
+      ),
+
+      // ---------------- BOTTOM NAV ----------------
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        backgroundColor: Colors.white,
+        selectedItemColor: kAdminPrimary,
+        unselectedItemColor: Colors.grey,
+        type: BottomNavigationBarType.fixed,
+        onTap: (index) {
+          setState(() => _currentIndex = index);
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard),
+            label: 'Dashboard',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.store),
+            label: 'Vendors',
+          ),
+        ],
       ),
     );
   }

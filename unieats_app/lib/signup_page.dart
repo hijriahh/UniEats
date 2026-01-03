@@ -161,8 +161,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Register',
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: kTextColor),
+                    'Register Account',
+                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: kTextColor),
                   ),
                   const SizedBox(height: 15),
 
