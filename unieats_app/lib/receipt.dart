@@ -12,8 +12,9 @@ Future<void> generateReceipt(Order order) async {
         return pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
+            pw.Text("UniEats Order Receipt"),
             pw.Text(order.vendorName, style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
-            pw.Text("Order ID: ${order.id.substring(0,10)}"),
+            pw.Text("\nOrder ID: ${order.id.substring(0,10)}"),
             pw.Text("Date: ${DateTime.fromMillisecondsSinceEpoch(order.createdAt)}"),
             pw.Text("Payment Method: ${order.paymentMethod}"), // NEW
             pw.SizedBox(height: 10),
