@@ -111,7 +111,7 @@ class _VendorsMenuPageState extends State<VendorsMenuPage> {
                 crossAxisCount: 2, // ✅ two cards per row
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
-                childAspectRatio: 0.75,
+                childAspectRatio: 0.64,
               ),
               itemBuilder: (context, index) {
                 final key = menuItems.keys.elementAt(index);
@@ -139,6 +139,7 @@ class _VendorsMenuPageState extends State<VendorsMenuPage> {
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         // IMAGE
                         ClipRRect(
