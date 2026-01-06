@@ -101,18 +101,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // ---------------- TOGGLE NOTIFICATIONS ----------------
-  void _toggleNotifications(bool value) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      final ref = FirebaseDatabase.instance.ref('users/${user.uid}');
-      await ref.update({'notifications': value});
-      setState(() {
-        notificationsEnabled = value;
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
