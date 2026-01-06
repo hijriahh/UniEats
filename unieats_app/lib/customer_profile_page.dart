@@ -205,15 +205,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           );
                         },
                       ),
-                      _buildActionTile(
-                        icon: Icons.notifications,
-                        label: "Notifications",
-                        trailing: Switch(
-                          value: notificationsEnabled,
-                          onChanged: _toggleNotifications,
-                          activeColor: kPrimaryColor,
-                        ),
-                      ),
+          
                       _buildActionTile(
                         icon: Icons.logout,
                         iconColor: Colors.red,
