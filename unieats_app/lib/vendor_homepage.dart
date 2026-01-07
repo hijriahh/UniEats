@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
-
 import 'vendor_navigation_bar.dart';
 import 'vendor_orders_page.dart';
 
@@ -23,7 +22,7 @@ class _VendorHomepageState extends State<VendorHomepage> {
   int newOrders = 0;
   int preparingOrders = 0;
   int completedOrders = 0;
-  double todaySales = 0.0;
+  double totalSales = 0.0;
 
   @override
   void initState() {
@@ -32,9 +31,7 @@ class _VendorHomepageState extends State<VendorHomepage> {
     _listenOrders();
   }
 
-  // =========================
   // LOAD VENDOR DATA
-  // =========================
   void _loadVendor() {
     FirebaseDatabase.instance.ref('vendors/${widget.vendorId}').onValue.listen((
       event,
@@ -48,9 +45,7 @@ class _VendorHomepageState extends State<VendorHomepage> {
     });
   }
 
-  // =========================
   // FIND TOP MENU ITEM
-  // =========================
   void _findTopMenu(dynamic menuData) {
     if (menuData == null || menuData is! Map) return;
 
@@ -74,9 +69,7 @@ class _VendorHomepageState extends State<VendorHomepage> {
     setState(() => topMenu = highestItem);
   }
 
-  // =========================
   // LISTEN TO ORDERS
-  // =========================
   void _listenOrders() {
     FirebaseDatabase.instance.ref('orders').onValue.listen((event) {
       int pending = 0;
@@ -111,7 +104,7 @@ class _VendorHomepageState extends State<VendorHomepage> {
         newOrders = pending;
         preparingOrders = preparing;
         completedOrders = completed;
-        todaySales = sales;
+        totalSales = sales;
       });
     });
   }
@@ -148,7 +141,7 @@ class _VendorHomepageState extends State<VendorHomepage> {
 
               // Top menu
               const Text(
-                "Today's Top Menu",
+                "Top Menu",
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
@@ -169,7 +162,7 @@ class _VendorHomepageState extends State<VendorHomepage> {
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              Colors.black.withOpacity(0.6),
+                              Colors.black.withAlpha(153),
                               Colors.transparent,
                             ],
                             begin: Alignment.bottomCenter,
@@ -232,9 +225,7 @@ class _VendorHomepageState extends State<VendorHomepage> {
     );
   }
 
-  // =========================
   // DASHBOARD CARD
-  // =========================
   Widget _dashboardCard({
     required String title,
     required String value,
@@ -256,8 +247,8 @@ class _VendorHomepageState extends State<VendorHomepage> {
 
   Widget _salesCard() {
     return _cardBase(
-      "Today's Sales",
-      "RM ${todaySales.toStringAsFixed(2)}",
+      "Total Sales",
+      "RM ${totalSales.toStringAsFixed(2)}",
       highlight: true,
     );
   }
@@ -270,7 +261,7 @@ class _VendorHomepageState extends State<VendorHomepage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
+            color: Colors.grey.withAlpha(51),
             blurRadius: 6,
             offset: const Offset(0, 3),
           ),
