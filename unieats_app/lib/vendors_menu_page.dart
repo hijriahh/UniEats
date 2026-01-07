@@ -23,9 +23,6 @@ class _VendorsMenuPageState extends State<VendorsMenuPage> {
     _listenMenu();
   }
 
-  // =========================
-  // LOAD MENU FROM FIREBASE
-  // =========================
   void _listenMenu() {
     FirebaseDatabase.instance
         .ref('vendors/${widget.vendorId}/menu')
@@ -41,9 +38,6 @@ class _VendorsMenuPageState extends State<VendorsMenuPage> {
         });
   }
 
-  // =========================
-  // EDIT PRICE
-  // =========================
   void _editPrice(String menuKey, dynamic oldPrice) {
     final controller = TextEditingController(text: oldPrice.toString());
 
@@ -83,9 +77,6 @@ class _VendorsMenuPageState extends State<VendorsMenuPage> {
     );
   }
 
-  // =========================
-  // TOGGLE AVAILABILITY
-  // =========================
   void _toggleAvailability(String key, bool current) {
     FirebaseDatabase.instance
         .ref('vendors/${widget.vendorId}/menu/$key')
@@ -100,18 +91,18 @@ class _VendorsMenuPageState extends State<VendorsMenuPage> {
         title: const Text("My Menu"),
         backgroundColor: kPrimaryColor,
         elevation: 0,
-        automaticallyImplyLeading: false, // ❌ no back button
+        automaticallyImplyLeading: false,
       ),
       body: menuItems.isEmpty
           ? const Center(child: Text("No menu items"))
           : GridView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: menuItems.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2, // ✅ two cards per row
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 220,
+                mainAxisExtent: 300,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
-                childAspectRatio: 0.64,
               ),
               itemBuilder: (context, index) {
                 final key = menuItems.keys.elementAt(index);
@@ -124,14 +115,14 @@ class _VendorsMenuPageState extends State<VendorsMenuPage> {
                 final available = item['available'] == true;
 
                 return GestureDetector(
-                  onTap: () => _editPrice(key, price), // ✅ tap card to edit
+                  onTap: () => _editPrice(key, price),
                   child: Container(
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withAlpha(13),
                           blurRadius: 8,
                           offset: const Offset(0, 4),
                         ),
@@ -139,103 +130,114 @@ class _VendorsMenuPageState extends State<VendorsMenuPage> {
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // IMAGE
-                        ClipRRect(
-                          borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(20),
-                          ),
-                          child:
-                              item['menuimage'] != null &&
-                                  item['menuimage'].toString().isNotEmpty
-                              ? Image.asset(
-                                  item['menuimage'],
-                                  height: 110,
-                                  width: double.infinity,
-                                  fit: BoxFit.cover,
-                                )
-                              : Container(
-                                  height: 110,
-                                  color: Colors.grey.shade200,
-                                  child: const Icon(
-                                    Icons.fastfood,
-                                    size: 40,
-                                    color: Colors.grey,
+                        AspectRatio(
+                          aspectRatio: 1.3,
+                          child: ClipRRect(
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(20),
+                            ),
+                            child:
+                                item['menuimage'] != null &&
+                                    item['menuimage'].toString().isNotEmpty
+                                ? Image.asset(
+                                    item['menuimage'],
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                  )
+                                : Container(
+                                    color: Colors.grey.shade200,
+                                    child: const Icon(
+                                      Icons.fastfood,
+                                      size: 40,
+                                      color: Colors.grey,
+                                    ),
                                   ),
-                                ),
+                          ),
                         ),
-
-                        Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item['name'] ?? '',
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                "RM ${price.toStringAsFixed(2)}",
-                                style: const TextStyle(
-                                  color: kPrimaryColor,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                "Orders: ${item['orderCount'] ?? 0}",
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-
-                              // AVAILABILITY ROW
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: available
-                                          ? Colors.green.shade100
-                                          : Colors.red.shade100,
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: Text(
-                                      available ? "Available" : "Unavailable",
-                                      style: TextStyle(
-                                        fontSize: 12,
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item['name'] ?? '',
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        color: available
-                                            ? Colors.green.shade700
-                                            : Colors.red.shade700,
+                                        fontSize: 15,
                                       ),
                                     ),
-                                  ),
-                                  Switch(
-                                    value: available,
-                                    activeColor: kPrimaryColor,
-                                    materialTapTargetSize: MaterialTapTargetSize
-                                        .shrinkWrap, // ✅ no overflow
-                                    onChanged: (_) =>
-                                        _toggleAvailability(key, available),
-                                  ),
-                                ],
-                              ),
-                            ],
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      "RM ${price.toStringAsFixed(2)}",
+                                      style: const TextStyle(
+                                        color: kPrimaryColor,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      "Orders: ${item['orderCount'] ?? 0}",
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: available
+                                            ? Colors.green.shade100
+                                            : Colors.red.shade100,
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: Text(
+                                        available ? "Available" : "Unavailable",
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                          color: available
+                                              ? Colors.green.shade700
+                                              : Colors.red.shade700,
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      height: 32,
+                                      child: FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Switch(
+                                          value: available,
+                                          activeColor: kPrimaryColor,
+                                          materialTapTargetSize:
+                                              MaterialTapTargetSize.shrinkWrap,
+                                          onChanged: (_) => _toggleAvailability(
+                                            key,
+                                            available,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],
